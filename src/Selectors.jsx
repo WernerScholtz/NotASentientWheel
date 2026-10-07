@@ -75,7 +75,7 @@ function SpinHub({ wooden = false, spinning, empty }) {
 
 export function ClassicWheel({ options, rotation, spinning, duration, onSpin }) {
   return <button className="wheel-interactive classic-graphic" onClick={onSpin} disabled={spinning || !options.length} aria-label="Spin the classic wheel">
-    <svg viewBox="0 0 600 600" className="wheel-svg" aria-hidden="true">
+    <svg viewBox="40 40 540 520" className="wheel-svg" aria-hidden="true">
       <circle cx="300" cy="308" r="246" fill="#3d5a3c" opacity=".07" />
       <circle cx="300" cy="300" r="244" fill="#fcfdf8" stroke="#e4e9d9" strokeWidth="1" />
       {Array.from({ length: 72 }, (_, i) => <path key={i} d={i % 6 === 0 ? 'M300 66v7' : 'M300 68v3'} transform={`rotate(${i * 5} 300 300)`} stroke="#c0cbb2" strokeWidth={i % 6 === 0 ? 2 : 1} />)}

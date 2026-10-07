@@ -6,7 +6,7 @@ A small, private, static React app for letting chance make a decision. Three sel
 - **Water wheel:** an illustrated wooden mill wheel, a tipping bucket, animated water, and Felix the farmer pointing out the winner.
 - **AI assistant:** a playful terminal with an animated orb and 28 dramatically unhelpful messages. No AI service, account, or API key required.
 
-The desktop layout fills the browser viewport, with list management on the left (approximately 25%) and the selector on the right (75%). Graphics grow or shrink with the available space while controls and the result remain visible; long lists scroll within the sidebar. A stacked phone fallback exists, but mobile support is not currently a priority. Subtle animated backgrounds, keyboard controls, reduced-motion support, and optional original synthesized sounds are included.
+The desktop layout fills the browser viewport, with list management on the left (approximately 25%) and the selector on the right (75%). Graphics grow or shrink with the available space; the result appears after selection as a compact frosted overlay in the centre of the graphic, fading in over one second. Dismiss it to see the whole graphic or use **Spin again**; long lists scroll within the sidebar. A stacked phone fallback exists, but mobile support is not currently a priority. Subtle animated backgrounds, keyboard controls, reduced-motion support, and optional original synthesized sounds are included.
 
 ## Run locally
 
@@ -17,7 +17,7 @@ npm install
 npm run dev
 ```
 
-Open the local address printed by Vite (normally **http://127.0.0.1:5173**). Click the wheel or the green button to select; buttons also work with Enter/Space.
+Open the local address printed by Vite (normally **http://127.0.0.1:5173**). Click the wheel or AI assistant to select; they also work with Enter/Space. Results appear over the centre of the selector once it finishes. Use **Spin again**, close the result with its × button, or press Escape while a result control is focused. Reduced motion reveals results without the fade.
 
 ```sh
 npm test        # Selection, parsing, persistence validation, and geometry
@@ -42,6 +42,12 @@ Options never go to a server or into a URL. Browser localStorage remembers the c
 Up to **500 options**, each **200 characters**, are supported. Oversized batches are rejected with an explanation rather than truncated. Dense wheels use smaller/abbreviated labels (above 120 entries the slices remain, but text is omitted); the sidebar and selected result keep the full text. Commas/newlines always delimit entries. Keep commas out of individual labels.
 
 Web Crypto picks the result before animation, using rejection sampling to avoid modulo bias. Every entry has an equal chance, including repeated labels. The wheel stops with that entry centred on the right-hand pointer. Selection does not remove entries automatically. Editing and theme changes are disabled during a run to keep the result consistent.
+
+## Brand icon and favicon
+
+The header uses `public/brand-icon.png` and the browser favicon uses `public/favicon.png`, both resized from the selected **Option A: Behind the spokes** image. The full-resolution source is kept in `assets/branding/option-a.png` and is not included in the production download.
+
+The previous header mark is preserved in `public/brand-icon-original.svg`; its original wheel drawing also remains in `src/Icons.jsx`. The previous favicon is preserved in `public/favicon-original.svg` (and the unchanged `public/favicon.svg`). To restore both, change the header image filename in `src/App.jsx` to `brand-icon-original.svg`, and set the icon link in `index.html` to `<link rel="icon" type="image/svg+xml" href="./favicon-original.svg" />`.
 
 ## GitHub Pages deployment
 

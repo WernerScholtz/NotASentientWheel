@@ -5,9 +5,9 @@ import { SoundEngine } from './audio.js';
 import { COLORS, MAX_LABEL_LENGTH, MAX_OPTIONS, SAMPLE_LABELS, STORAGE_KEY, makeOptions, mergeLabels, nextRotation, parseOptions, randomIndex, validateSavedList } from './logic.js';
 
 const THEMES = [
-  { id: 'classic', name: 'Classic wheel', icon: 'wheel', caption: 'A timeless spin on making up your mind.', action: 'Spin the wheel' },
-  { id: 'water', name: 'Water wheel', icon: 'water', caption: 'A little water. A little luck. An honest day’s choosing.', action: 'Pour & spin' },
-  { id: 'ai', name: 'AI assistant', icon: 'sparkles', caption: 'Big assistant energy. Absolutely no actual intelligence.', action: 'Let “AI” decide' },
+  { id: 'classic', name: 'Classic wheel', icon: 'wheel', caption: 'A timeless spin on making up your mind.' },
+  { id: 'water', name: 'Water wheel', icon: 'water', caption: 'A little water. A little luck. An honest day’s choosing.' },
+  { id: 'ai', name: 'AI assistant', icon: 'sparkles', caption: 'Big assistant energy. Absolutely no actual intelligence.' },
 ];
 
 function loadInitial() {
@@ -42,6 +42,7 @@ export default function App() {
   const [rotation, setRotation] = useState(0);
   const [duration, setDuration] = useState(0);
   const [result, setResult] = useState(null);
+  const [resultVisible, setResultVisible] = useState(false);
   const [aiStep, setAiStep] = useState(0);
   const [messageOffset, setMessageOffset] = useState(0);
   const [toast, setToast] = useState(null);
@@ -61,6 +62,7 @@ export default function App() {
   const soundEnabled = useRef(sound);
   const importInput = useRef(null);
   const textarea = useRef(null);
+  const graphic = useRef(null);
   const mounted = useRef(true);
   const busy = spinning || importing;
   const currentTheme = THEMES.find(item => item.id === theme);
@@ -146,6 +148,7 @@ export default function App() {
     setSpinReducedMotion(reducedMotion);
     setSpinning(true);
     setResult(null);
+    setResultVisible(false);
     setDuration(runDuration);
     setRotation(nextRotation(rotation, index, options.length));
     setAiStep(0);
@@ -162,8 +165,14 @@ export default function App() {
       clearInterval(aiTimer.current);
       setSpinning(false);
       setResult(selected);
+      setResultVisible(true);
       if (soundEnabled.current) audio.current?.finish(theme);
     }, runDuration);
+  }
+
+  function dismissResult() {
+    setResultVisible(false);
+    graphic.current?.querySelector('button')?.focus();
   }
 
   async function copyList() {
@@ -226,7 +235,7 @@ export default function App() {
 
   return <div className="app-shell" data-motion={reducedMotion ? 'reduced' : 'full'}>
     <header className="app-header flex items-center justify-between gap-4">
-      <a className="brand flex items-center gap-3" href="./" aria-label="Not a Sentient Wheel home"><span className="brand-mark"><Icon name="wheel" size={29} /></span><span className="brand-name">not a sentient<span>wheel<span className="brand-period">.</span></span></span></a>
+      <a className="brand flex items-center gap-3" href="./" aria-label="Not a Sentient Wheel home"><span className="brand-mark"><img src={`${import.meta.env.BASE_URL}brand-icon.png`} width="46" height="46" alt="" /></span><span className="brand-name">not a sentient<span>wheel<span className="brand-period">.</span></span></span></a>
       <span className="header-tagline">Less overthinking. More possibility.</span>
       <div className="header-actions flex items-center gap-4"><span className="local-badge"><span />Just you & chance</span><label className="motion-control flex items-center gap-2"><span>Motion</span><select aria-label="Animation preference" value={motionPreference} onChange={event => setMotionPreference(event.target.value)} disabled={busy} title={`Your system requests ${systemReducedMotion ? 'reduced motion' : 'full animations'}. Choose Full animation to override it.`}><option value="system">Follow system</option><option value="full">Full animation</option><option value="reduced">Reduced motion</option></select></label><button className="sound-button flex items-center gap-2" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Mute sound effects' : 'Enable sound effects'}><Icon name={sound ? 'sound' : 'muted'} size={18} /><span>Sound {sound ? 'on' : 'off'}</span></button></div>
     </header>
@@ -257,15 +266,24 @@ export default function App() {
         <div className="selection-stage">
           <div className="stage-grid" /><div className="ambient-blob blob-one" /><div className="ambient-blob blob-two" />
           <div className="stage-top flex items-center justify-between"><span className="stage-caption"><span className="status-dot" />{theme === 'classic' ? 'THE ORIGINAL CHANCE MACHINE' : theme === 'water' ? 'POWERED BY WATER & WHIMSY' : 'YOUR VERY ARTIFICIAL ASSISTANT'}</span><span className="odds-badge">{options.length ? `${options.length} option${options.length === 1 ? '' : 's'} · equal chances` : 'Ready for possibilities'}</span></div>
-          <div className="graphic-wrap">
+          <div className="graphic-wrap" ref={graphic}>
             {theme === 'classic' && <ClassicWheel options={options} rotation={rotation} spinning={spinning} duration={duration} onSpin={spin} />}
             {theme === 'water' && <WaterWheel options={options} rotation={rotation} spinning={spinning} duration={duration} result={result} onSpin={spin} />}
             {theme === 'ai' && <AISelector options={options} spinning={spinning} result={result} aiStep={aiStep} messageOffset={messageOffset} onSpin={spin} />}
+            {result && resultVisible && <div className="result-overlay">
+              <div className="result-card" role="group" aria-label="Selection result" onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); dismissResult(); } }}>
+                <button className="result-close" onClick={dismissResult} aria-label="Dismiss result"><Icon name="close" size={16} /></button>
+                <span className="result-icon" aria-hidden="true"><Icon name="sparkles" size={23} /></span>
+                <p className="result-kicker">THE UNIVERSE HAS SPOKEN</p>
+                <p className="result-text">{result.label}</p>
+                <span className="chosen-badge">The chosen one <Icon name="check" size={14} /></span>
+                <button className="result-again inline-flex items-center justify-center gap-2" onClick={spin} disabled={busy}><Icon name="refresh" size={15} />Spin again</button>
+              </div>
+            </div>}
           </div>
-          <div className="spin-controls"><button className="spin-button inline-flex items-center justify-center gap-3" onClick={spin} disabled={busy || !options.length}><Icon name={spinning ? 'refresh' : currentTheme.icon} size={19} className={spinning ? 'spinning-icon' : ''} />{spinning ? theme === 'ai' ? 'Consulting destiny…' : 'Letting chance decide…' : importing ? 'Importing…' : result ? 'Try your luck again' : currentTheme.action}{!spinning && <Icon name="arrow" size={18} />}</button><p>{spinning ? 'A little suspense is part of the fun.' : !options.length ? 'Add some options on the left to get started.' : theme === 'ai' ? 'Click the assistant, or let the button do the asking.' : 'Click the wheel, or give this button a spin.'}</p></div>
         </div>
 
-        <div className={`result-card flex items-center gap-4 ${result ? 'has-result' : ''}`} role="status" aria-live="polite" aria-atomic="true"><span className="result-icon"><Icon name={result ? 'sparkles' : spinning ? 'refresh' : 'leaf'} size={23} /></span><div className="result-content"><p className="result-kicker">{result ? 'THE UNIVERSE HAS SPOKEN' : spinning ? 'A PLOT TWIST IS IN THE WORKS' : 'OPEN TO A LITTLE SERENDIPITY?'}</p><p className="result-text">{result ? result.label : spinning ? theme === 'water' ? 'Felix is keeping an eye on the wheel…' : theme === 'ai' ? 'Your assistant is being exceptionally dramatic…' : 'Round and round. Your answer is on its way.' : 'Your next great decision starts here.'}</p></div>{result && <span className="chosen-badge">The chosen one <Icon name="check" size={14} /></span>}</div>
+        <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">{spinning ? 'Letting chance decide…' : result ? `The chosen one: ${result.label}` : ''}</p>
         <p className="theme-caption">{currentTheme.caption}</p>
       </section>
     </main>
