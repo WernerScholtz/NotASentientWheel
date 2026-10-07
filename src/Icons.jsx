@@ -14,7 +14,7 @@ export function Icon({ name, size = 20, ...props }) {
     sparkles: <><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3ZM20 2v4m-2-2h4" /></>,
     shield: <><path d="m12 3 8 3v6c0 5-8 9-8 9s-8-4-8-9V6l8-3Z" /><path d="m8 12 3 3 5-6" /></>,
     check: <path d="m5 12 4 4L19 6" />,
-    refresh: <><path d="M20 7v5h-5M4 17v-5h5" /><path d="M6 6a8 8 0 0 1 14 6M4 12a8 8 0 0 0 14 6" /></>,
+    refresh: <path d="M17 9l3 3 3-3M7 15l-3-3-3 3M6 6a8 8 0 0 1 14 6M4 12a8 8 0 0 0 14 6" />,
     leaf: <><path d="M20 3c-9 0-16 2-16 9a7 7 0 0 0 7 7c7 0 9-7 9-16Z" /><path d="m4 21 11-11" /></>,
     close: <path d="m6 6 12 12M6 18 18 6" />,
   };
