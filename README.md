@@ -43,6 +43,8 @@ Links are fixed snapshots of labels in their original order, including spaces, U
 
 Opening a shared link replaces the current list and saves the imported copy in this browser. A temporary **Undo** restores the previous list. Invalid or unsupported links keep the existing list and display an explanation. Editing the imported list removes its fragment from the address so a refresh keeps your edits; the original shared link still opens the original snapshot. Links also work when opening another snapshot in the same tab.
 
+The classic and water wheels start at a randomly chosen orientation when the page opens or refreshes, including shared links. List order stays the same. The starting position is separate from winner selection, and is not saved in the shared URL. A refresh can occasionally choose the same starting position again.
+
 The POC caps generated links at **8,000 characters** and decoded JSON at **512,000 bytes**, in addition to the app's normal option limits. Large lists may need text export instead. A current browser with `CompressionStream` and `DecompressionStream` support is required. No backend records exist to expire or revoke.
 
 For a quick check, paste 20 entries such as `Firstname Lastname1` through `Firstname Lastname20`, share, and open the copied link. `npm test` verifies exact reconstruction of that list and interoperability with independently generated gzip data.

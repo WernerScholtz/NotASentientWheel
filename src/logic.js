@@ -42,6 +42,11 @@ export function randomIndex(count, nextUint32 = () => crypto.getRandomValues(new
   return value % count;
 }
 
+export function randomStartingRotation(count, nextUint32) {
+  if (count === 0) return 0;
+  return randomIndex(count, nextUint32) * 360 / count;
+}
+
 export function nextRotation(current, index, count) {
   const target = ((-index * 360 / count) % 360 + 360) % 360;
   const normalized = ((current % 360) + 360) % 360;

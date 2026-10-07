@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MAX_OPTIONS, fitLabel, makeOptions, mergeLabels, nextRotation, parseOptions, randomIndex, slicePath, validateSavedList } from '../src/logic.js';
+import { MAX_OPTIONS, fitLabel, makeOptions, mergeLabels, nextRotation, parseOptions, randomIndex, randomStartingRotation, slicePath, validateSavedList } from '../src/logic.js';
 
 test('pasted lists accept commas, LF, CRLF, phrases, and empty separators', () => {
   assert.deepEqual(parseOptions(' Coffee break,Go for a walk\r\n\n Read a book, ,Take a nap\rSurprise me '), ['Coffee break', 'Go for a walk', 'Read a book', 'Take a nap', 'Surprise me']);
@@ -41,6 +41,23 @@ test('every selected segment finishes upright at the right-hand pointer, across 
       rotation = next;
     }
   }
+});
+
+test('random starting positions preserve the selected winner at the pointer', () => {
+  assert.equal(randomStartingRotation(0, () => { throw new Error('Empty lists need no randomness'); }), 0);
+  for (const count of [1, 2, 3, 16, 20, 500]) {
+    for (const startingIndex of [0, Math.floor(count / 2), count - 1]) {
+      const rotation = randomStartingRotation(count, () => startingIndex);
+      assert.ok(rotation >= 0 && rotation < 360);
+      for (let selectedIndex = 0; selectedIndex < count; selectedIndex++) {
+        const final = nextRotation(rotation, selectedIndex, count);
+        const pointerAngle = (final + selectedIndex * 360 / count) % 360;
+        assert.ok(Math.min(pointerAngle, 360 - pointerAngle) < 0.000001);
+        assert.ok(final - rotation >= 1800 - 0.000001);
+      }
+    }
+  }
+  assert.notEqual(randomStartingRotation(16, () => 1), randomStartingRotation(16, () => 2));
 });
 
 test('wheel geometry handles a single option and never outputs invalid coordinates', () => {

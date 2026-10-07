@@ -16,6 +16,7 @@ This document is the reference for development and future agents working on Not 
 - Store the list in localStorage, with schema validation and guarded reads/writes. Storage failures must not prevent use. Do not send user options over the network. The URL-sharing POC may encode a list snapshot into a versioned, gzip-compressed base64url fragment only when the user clicks Share list. Decode and validate incoming lists before use; preserve order and duplicates, bound URL and decompressed sizes, and create fresh local option IDs. Keep OS motion and sound preferences out of shared snapshots.
 - Provide plain-text copy, export, and import. Treat labels as text, never HTML. Explain any practical limits in the interface instead of silently dropping data.
 - Keep selection logic independent of graphics. Choose a uniform random index using Web Crypto with rejection sampling. Decide the result before animation; all themes must reveal that same selected record.
+- Randomize the initial wheel orientation on page load and shared-list restoration without reordering options or changing winner selection. Do not persist or share that orientation. Preserve correct pointer alignment from every starting position.
 - Freeze the options snapshot during selection, prevent overlapping runs, and make cancel/reset/unmount cleanup explicit. Avoid stale timer callbacks.
 
 ## React architecture

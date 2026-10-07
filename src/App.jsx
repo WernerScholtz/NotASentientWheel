@@ -4,7 +4,7 @@ import { AI_MESSAGES, AISelector, ClassicWheel, WaterWheel } from './Selectors.j
 import { SoundEngine } from './audio.js';
 import { ShareDialog } from './ShareDialog.jsx';
 import { clearSharedListHash, createShareLink, hasSharedList, readSharedList } from './sharing.js';
-import { COLORS, MAX_LABEL_LENGTH, MAX_OPTIONS, SAMPLE_LABELS, STORAGE_KEY, makeOptions, mergeLabels, nextRotation, parseOptions, randomIndex, validateSavedList } from './logic.js';
+import { COLORS, MAX_LABEL_LENGTH, MAX_OPTIONS, SAMPLE_LABELS, STORAGE_KEY, makeOptions, mergeLabels, nextRotation, parseOptions, randomIndex, randomStartingRotation, validateSavedList } from './logic.js';
 
 const THEMES = [
   { id: 'classic', name: 'Classic wheel', icon: 'wheel', caption: 'A timeless spin on making up your mind.' },
@@ -33,6 +33,12 @@ function loadInitial() {
   };
 }
 
+function startingRotation(count) {
+  // An unavailable random source must not prevent the list from opening.
+  try { return randomStartingRotation(count); }
+  catch { return 0; }
+}
+
 export default function App() {
   const [initial] = useState(loadInitial);
   const [options, setOptions] = useState(initial.options);
@@ -45,7 +51,7 @@ export default function App() {
   const [loadingShared, setLoadingShared] = useState(() => hasSharedList(initial.sharedHash));
   const [sharing, setSharing] = useState(false);
   const [shareLink, setShareLink] = useState('');
-  const [rotation, setRotation] = useState(0);
+  const [rotation, setRotation] = useState(() => startingRotation(initial.options.length));
   const [duration, setDuration] = useState(0);
   const [result, setResult] = useState(null);
   const [resultVisible, setResultVisible] = useState(false);
@@ -116,6 +122,7 @@ export default function App() {
         const labels = await readSharedList(hash);
         if (!active || id !== request) return;
         setOptions(makeOptions(labels));
+        setRotation(startingRotation(labels.length));
         notify(`${labels.length} options loaded from the shared link.`, () => updateOptions(previous));
       } catch (error) {
         if (!active || id !== request) return;
