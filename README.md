@@ -33,7 +33,7 @@ npm run preview # Test the production build, normally at port 4173
 4. Remove an option with its × button. Clear/delete/import actions offer a temporary **Undo**.
 5. Refresh or reopen the browser: options, the selected theme, and sound/duplicate/motion preferences remain on this browser and origin.
 6. Use **Copy list** or **Export** to keep lists yourself. **Import** reads a `.txt`/`.csv` file and replaces the current list exactly, including intentional duplicates. Paste an old list in the input to append instead. The file format is plain text, one option per line, or comma separated; it is not a quoted CSV parser.
-7. Use **Motion → Full animation** to show the complete spin even when Windows or a remote desktop requests reduced motion. **Follow system** is the default; **Reduced motion** skips spinning and ambient animation and reveals the result quickly. The choice is remembered in this browser, and cannot change during a spin. Full animations take 5 seconds for the classic wheel and AI assistant, or 6.2 seconds for the water wheel.
+7. **Motion → Full animation** is the default and shows the complete spin even when Windows or a remote desktop requests reduced motion. **Follow system** uses the operating system preference; **Reduced motion** skips spinning and ambient animation and reveals the result quickly. The choice is remembered in this browser, and cannot change during a spin. Full animations take 5 seconds for the classic wheel and AI assistant, or 6.2 seconds for the water wheel.
 
 ## Data and practical limits
 

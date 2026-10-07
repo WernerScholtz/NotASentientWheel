@@ -25,7 +25,7 @@ function loadInitial() {
     theme: THEMES.some(theme => theme.id === saved?.theme) ? saved.theme : 'classic',
     sound: typeof saved?.sound === 'boolean' ? saved.sound : true,
     allowDuplicates: saved?.allowDuplicates === true,
-    motionPreference: ['system', 'full', 'reduced'].includes(saved?.motionPreference) ? saved.motionPreference : 'system',
+    motionPreference: ['system', 'full', 'reduced'].includes(saved?.motionPreference) ? saved.motionPreference : 'full',
     warning,
   };
 }
