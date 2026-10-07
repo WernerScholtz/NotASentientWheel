@@ -31,9 +31,9 @@ npm run preview # Test the production build, normally at port 4173
 2. Paste words or phrases separated by commas or newlines. Click **Add to the wheel**, or press Ctrl/Cmd+Enter.
 3. With **Allow duplicates** unchecked, existing labels and repeated input are skipped, ignoring case. Check it to add each occurrence as a separate entry; duplicate entries have separate chances.
 4. Remove an option with its × button. Clear/delete/import actions offer a temporary **Undo**.
-5. Refresh or reopen the browser: options, the selected theme, and sound/duplicate preferences remain on this browser and origin.
+5. Refresh or reopen the browser: options, the selected theme, and sound/duplicate/motion preferences remain on this browser and origin.
 6. Use **Copy list** or **Export** to keep lists yourself. **Import** reads a `.txt`/`.csv` file and replaces the current list exactly, including intentional duplicates. Paste an old list in the input to append instead. The file format is plain text, one option per line, or comma separated; it is not a quoted CSV parser.
-7. Toggle sound and try a narrow browser window. System reduced-motion settings skip spinning and ambient animation and reveal the result quickly.
+7. Use **Motion → Full animation** to show the complete spin even when Windows or a remote desktop requests reduced motion. **Follow system** is the default; **Reduced motion** skips spinning and ambient animation and reveals the result quickly. The choice is remembered in this browser, and cannot change during a spin. Full animations take 5 seconds for the classic wheel and AI assistant, or 6.2 seconds for the water wheel.
 
 ## Data and practical limits
 
@@ -43,10 +43,12 @@ Up to **500 options**, each **200 characters**, are supported. Oversized batches
 
 Web Crypto picks the result before animation, using rejection sampling to avoid modulo bias. Every entry has an equal chance, including repeated labels. The wheel stops with that entry centred on the right-hand pointer. Selection does not remove entries automatically. Editing and theme changes are disabled during a run to keep the result consistent.
 
-## GitHub Pages, when ready
+## GitHub Pages deployment
 
 The app is ready for static hosting; it has no backend and uses relative asset paths, as described in the [Vite production guide](https://vite.dev/guide/build). Tailwind is compiled at build time following its [Vite integration](https://tailwindcss.com/docs/installation/using-vite). React and React DOM are the only production dependencies. No fonts, images, audio, or scripts are fetched from external services at runtime.
 
-Nothing has been pushed or published. Once the local app is approved, use a GitHub Actions Pages deployment: install with `npm ci`, run `npm run build`, upload `dist` with `actions/upload-pages-artifact`, and deploy with `actions/deploy-pages`. Set the repository’s Pages source to **GitHub Actions**. The intended project URL is `https://wernerscholtz.github.io/NotASentientWheel/`.
+The workflow in `.github/workflows/deploy.yml` runs on pushes to `master` and can also be started manually from GitHub's Actions tab. It installs the locked dependencies with `npm ci`, runs the tests, builds the app, and deploys only `dist/` to GitHub Pages. A failed test or build prevents deployment.
+
+Set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**. The project URL is [https://wernerscholtz.github.io/NotASentientWheel/](https://wernerscholtz.github.io/NotASentientWheel/). Do not deploy the repository root directly: its `index.html` references development JSX that requires Vite's build step. The build replaces that reference with compiled assets using paths relative to the project URL.
 
 See [ENGINEERING.md](ENGINEERING.md) for the practices established before implementation.

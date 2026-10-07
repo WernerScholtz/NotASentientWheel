@@ -29,7 +29,7 @@ This document is the reference for development and future agents working on Not 
 
 - Desktop layout: option management occupies roughly 25%, selection roughly 75%. Fill the available viewport width and height; do not impose a page width cap or require page scrolling. Reserve space for all controls and the result, and let the selector graphics grow or shrink within the remaining space. Only the options list and textarea should scroll. A stacked mobile fallback exists, but mobile support is not currently a priority.
 - Make spinning possible with mouse, touch, and keyboard. Label icon buttons; expose disabled states and progress, and announce the selected result with a live region.
-- Respect reduced-motion preferences, including background effects. Offer a sound toggle; start audio only following a user gesture. Audio failure must not block selection.
+- Follow system reduced-motion preferences by default, including background effects. Provide a browser-persisted choice to explicitly enable full animations or reduced motion; resolve that choice consistently for CSS and selection timing. Keep the active animation mode fixed during a spin. Offer a sound toggle; start audio only following a user gesture. Audio failure must not block selection.
 - Use readable contrast, visible focus, sufficiently large targets, and text status in addition to color and animation.
 - Keep long labels usable, including in lists and final results. Dense wheel labels may be abbreviated visually while preserving full labels elsewhere.
 - Make the three themes visually distinctive while keeping the same controls and predictable selection behavior.

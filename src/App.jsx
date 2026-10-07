@@ -25,6 +25,7 @@ function loadInitial() {
     theme: THEMES.some(theme => theme.id === saved?.theme) ? saved.theme : 'classic',
     sound: typeof saved?.sound === 'boolean' ? saved.sound : true,
     allowDuplicates: saved?.allowDuplicates === true,
+    motionPreference: ['system', 'full', 'reduced'].includes(saved?.motionPreference) ? saved.motionPreference : 'system',
     warning,
   };
 }
@@ -45,7 +46,12 @@ export default function App() {
   const [messageOffset, setMessageOffset] = useState(0);
   const [toast, setToast] = useState(null);
   const [storageWarning, setStorageWarning] = useState(initial.warning);
-  const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const [motionPreference, setMotionPreference] = useState(initial.motionPreference);
+  const [systemReducedMotion, setSystemReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const [spinReducedMotion, setSpinReducedMotion] = useState(false);
+  const prefersReducedMotion = motionPreference === 'reduced' || (motionPreference === 'system' && systemReducedMotion);
+  // Keep a running selection consistent if the system preference changes mid-spin.
+  const reducedMotion = spinning ? spinReducedMotion : prefersReducedMotion;
   const audio = useRef(null);
   const timer = useRef(null);
   const aiTimer = useRef(null);
@@ -63,7 +69,7 @@ export default function App() {
     mounted.current = true;
     audio.current = new SoundEngine();
     const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const onChange = event => setReducedMotion(event.matches);
+    const onChange = event => setSystemReducedMotion(event.matches);
     preference.addEventListener('change', onChange);
     return () => {
       mounted.current = false;
@@ -79,9 +85,9 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, options, theme, sound, allowDuplicates }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, options, theme, sound, allowDuplicates, motionPreference }));
     } catch { setStorageWarning('Browser storage is unavailable. Copy or export your list to keep it.'); }
-  }, [options, theme, sound, allowDuplicates]);
+  }, [options, theme, sound, allowDuplicates, motionPreference]);
 
   function notify(message, undo = null) {
     clearTimeout(toastTimer.current);
@@ -137,6 +143,7 @@ export default function App() {
     const runDuration = reducedMotion ? 450 : theme === 'water' ? 6200 : 5000;
     const id = ++runId.current;
     running.current = true;
+    setSpinReducedMotion(reducedMotion);
     setSpinning(true);
     setResult(null);
     setDuration(runDuration);
@@ -217,11 +224,11 @@ export default function App() {
     notify('List cleared. A fresh start awaits.', () => updateOptions(previous));
   }
 
-  return <div className="app-shell">
+  return <div className="app-shell" data-motion={reducedMotion ? 'reduced' : 'full'}>
     <header className="app-header flex items-center justify-between gap-4">
       <a className="brand flex items-center gap-3" href="./" aria-label="Not a Sentient Wheel home"><span className="brand-mark"><Icon name="wheel" size={29} /></span><span className="brand-name">not a sentient<span>wheel<span className="brand-period">.</span></span></span></a>
       <span className="header-tagline">Less overthinking. More possibility.</span>
-      <div className="flex items-center gap-4"><span className="local-badge"><span />Just you & chance</span><button className="sound-button flex items-center gap-2" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Mute sound effects' : 'Enable sound effects'}><Icon name={sound ? 'sound' : 'muted'} size={18} /><span>Sound {sound ? 'on' : 'off'}</span></button></div>
+      <div className="header-actions flex items-center gap-4"><span className="local-badge"><span />Just you & chance</span><label className="motion-control flex items-center gap-2"><span>Motion</span><select aria-label="Animation preference" value={motionPreference} onChange={event => setMotionPreference(event.target.value)} disabled={busy} title={`Your system requests ${systemReducedMotion ? 'reduced motion' : 'full animations'}. Choose Full animation to override it.`}><option value="system">Follow system</option><option value="full">Full animation</option><option value="reduced">Reduced motion</option></select></label><button className="sound-button flex items-center gap-2" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Mute sound effects' : 'Enable sound effects'}><Icon name={sound ? 'sound' : 'muted'} size={18} /><span>Sound {sound ? 'on' : 'off'}</span></button></div>
     </header>
 
     <main className="workspace">
