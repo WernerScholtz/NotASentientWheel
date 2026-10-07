@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Icon } from './Icons.jsx';
 import { AI_MESSAGES, AISelector, ClassicWheel, WaterWheel } from './Selectors.jsx';
 import { SoundEngine } from './audio.js';
+import { ShareDialog } from './ShareDialog.jsx';
+import { clearSharedListHash, createShareLink, hasSharedList, readSharedList } from './sharing.js';
 import { COLORS, MAX_LABEL_LENGTH, MAX_OPTIONS, SAMPLE_LABELS, STORAGE_KEY, makeOptions, mergeLabels, nextRotation, parseOptions, randomIndex, validateSavedList } from './logic.js';
 
 const THEMES = [
@@ -27,6 +29,7 @@ function loadInitial() {
     allowDuplicates: saved?.allowDuplicates === true,
     motionPreference: ['system', 'full', 'reduced'].includes(saved?.motionPreference) ? saved.motionPreference : 'full',
     warning,
+    sharedHash: window.location.hash,
   };
 }
 
@@ -39,6 +42,9 @@ export default function App() {
   const [input, setInput] = useState('');
   const [spinning, setSpinning] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [loadingShared, setLoadingShared] = useState(() => hasSharedList(initial.sharedHash));
+  const [sharing, setSharing] = useState(false);
+  const [shareLink, setShareLink] = useState('');
   const [rotation, setRotation] = useState(0);
   const [duration, setDuration] = useState(0);
   const [result, setResult] = useState(null);
@@ -63,8 +69,10 @@ export default function App() {
   const importInput = useRef(null);
   const textarea = useRef(null);
   const graphic = useRef(null);
+  const optionsRef = useRef(options);
+  optionsRef.current = options;
   const mounted = useRef(true);
-  const busy = spinning || importing;
+  const busy = spinning || importing || loadingShared;
   const currentTheme = THEMES.find(item => item.id === theme);
 
   useEffect(() => {
@@ -86,10 +94,48 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    let active = true;
+    let request = 0;
+    async function restoreSharedList() {
+      const id = ++request;
+      const hash = window.location.hash;
+      if (!hasSharedList(hash)) { setLoadingShared(false); return; }
+      // Navigation to another shared list cancels any in-flight selection.
+      runId.current++;
+      running.current = false;
+      clearTimeout(timer.current);
+      clearInterval(aiTimer.current);
+      audio.current?.stop();
+      setSpinning(false);
+      setLoadingShared(true);
+      setResult(null);
+      setDuration(0);
+      setRotation(0);
+      const previous = optionsRef.current;
+      try {
+        const labels = await readSharedList(hash);
+        if (!active || id !== request) return;
+        setOptions(makeOptions(labels));
+        notify(`${labels.length} options loaded from the shared link.`, () => updateOptions(previous));
+      } catch (error) {
+        if (!active || id !== request) return;
+        clearSharedListHash();
+        notify(error.message);
+      } finally {
+        if (active && id === request) setLoadingShared(false);
+      }
+    }
+    restoreSharedList();
+    window.addEventListener('hashchange', restoreSharedList);
+    return () => { active = false; request++; window.removeEventListener('hashchange', restoreSharedList); };
+  }, []);
+
+  useEffect(() => {
+    if (loadingShared) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, options, theme, sound, allowDuplicates, motionPreference }));
     } catch { setStorageWarning('Browser storage is unavailable. Copy or export your list to keep it.'); }
-  }, [options, theme, sound, allowDuplicates, motionPreference]);
+  }, [options, theme, sound, allowDuplicates, motionPreference, loadingShared]);
 
   function notify(message, undo = null) {
     clearTimeout(toastTimer.current);
@@ -99,6 +145,9 @@ export default function App() {
 
   function updateOptions(next) {
     if (running.current) return;
+    // Once edited, refreshing should keep the local copy rather than reload
+    // the original snapshot still present in the incoming link.
+    clearSharedListHash();
     setOptions(next);
     setResult(null);
     setDuration(0);
@@ -137,7 +186,7 @@ export default function App() {
   }
 
   function spin() {
-    if (running.current || importing || !options.length) return;
+    if (running.current || busy || !options.length) return;
     let selected;
     try { selected = options[randomIndex(options.length)]; }
     catch { notify('Secure randomness is unavailable. Please use a modern browser on localhost or HTTPS.'); return; }
@@ -175,6 +224,18 @@ export default function App() {
     graphic.current?.querySelector('button')?.focus();
   }
 
+  async function shareList() {
+    if (busy || sharing || !options.length) return;
+    setSharing(true);
+    const id = runId.current;
+    try {
+      const url = await createShareLink(options.map(option => option.label), window.location.href);
+      if (mounted.current && id === runId.current) setShareLink(url);
+    } catch (error) {
+      if (mounted.current) notify(error.message);
+    } finally { if (mounted.current) setSharing(false); }
+  }
+
   async function copyList() {
     const text = options.map(option => option.label).join('\n');
     try {
@@ -206,9 +267,10 @@ export default function App() {
     if (!file || running.current) return;
     if (file.size > 250000) { notify('Please use a text file smaller than 250 KB.'); return; }
     setImporting(true);
+    const id = runId.current;
     try {
       const labels = parseOptions(await file.text());
-      if (!mounted.current) return;
+      if (!mounted.current || id !== runId.current) return;
       if (!labels.length) { notify('This file has no options to import.'); return; }
       if (labels.length > MAX_OPTIONS || labels.some(label => label.length > MAX_LABEL_LENGTH)) {
         notify(`Use up to ${MAX_OPTIONS} options, each ${MAX_LABEL_LENGTH} characters or fewer.`); return;
@@ -256,8 +318,8 @@ export default function App() {
           {!options.length && <div className="empty-list"><Icon name="leaf" size={28} /><p>A world of possibilities.<br />An empty list, for now.</p><button className="text-button" onClick={() => updateOptions(makeOptions(SAMPLE_LABELS))} disabled={busy}>Try an example list <span aria-hidden="true">↗</span></button></div>}
         </div>
 
-        <div className="list-tools"><div className="flex gap-2"><button onClick={copyList} disabled={!options.length || busy} className="utility-button flex items-center justify-center gap-2"><Icon name="copy" size={15} />Copy list</button><button onClick={exportList} disabled={!options.length} className="utility-button flex items-center justify-center gap-2"><Icon name="download" size={15} />Export</button></div><button onClick={() => importInput.current?.click()} disabled={busy} className="import-button flex items-center justify-center gap-2" aria-label="Import a previous list" title="Import a previous list from a text file"><Icon name="upload" size={15} />Import</button><input className="sr-only" ref={importInput} type="file" accept=".txt,.csv,text/plain,text/csv" onChange={importList} tabIndex={-1} aria-label="Import options text file" /><p className="import-help">Import replaces the list. Paste to append.</p></div>
-        <div className={`storage-note flex items-start gap-2 ${storageWarning ? 'storage-error' : ''}`}><Icon name="shield" size={17} /><p>{storageWarning || <>Saved in this browser.<br />{' '}Your lists stay yours. No accounts, no links.</>}</p></div>
+        <div className="list-tools"><button onClick={shareList} disabled={busy || sharing || !options.length} className="share-button utility-button flex items-center justify-center gap-2"><Icon name="link" size={15} />{sharing ? 'Creating link…' : 'Share list'}</button><div className="flex gap-2"><button onClick={copyList} disabled={!options.length || busy} className="utility-button flex items-center justify-center gap-2"><Icon name="copy" size={15} />Copy list</button><button onClick={exportList} disabled={!options.length} className="utility-button flex items-center justify-center gap-2"><Icon name="download" size={15} />Export</button></div><button onClick={() => importInput.current?.click()} disabled={busy} className="import-button flex items-center justify-center gap-2" aria-label="Import a previous list" title="Import a previous list from a text file"><Icon name="upload" size={15} />Import</button><input className="sr-only" ref={importInput} type="file" accept=".txt,.csv,text/plain,text/csv" onChange={importList} tabIndex={-1} aria-label="Import options text file" /><p className="import-help">Import replaces the list. Paste to append.</p></div>
+        <div className={`storage-note flex items-start gap-2 ${storageWarning ? 'storage-error' : ''}`}><Icon name="shield" size={17} /><p>{storageWarning || <>Saved in this browser.<br />{' '}No accounts. Share only when you choose.</>}</p></div>
       </aside>
 
       <section className={`selector-panel theme-${theme}`} aria-label="Random selector">
@@ -267,9 +329,9 @@ export default function App() {
           <div className="stage-grid" /><div className="ambient-blob blob-one" /><div className="ambient-blob blob-two" />
           <div className="stage-top flex items-center justify-between"><span className="stage-caption"><span className="status-dot" />{theme === 'classic' ? 'THE ORIGINAL CHANCE MACHINE' : theme === 'water' ? 'POWERED BY WATER & WHIMSY' : 'YOUR VERY ARTIFICIAL ASSISTANT'}</span><span className="odds-badge">{options.length ? `${options.length} option${options.length === 1 ? '' : 's'} · equal chances` : 'Ready for possibilities'}</span></div>
           <div className="graphic-wrap" ref={graphic}>
-            {theme === 'classic' && <ClassicWheel options={options} rotation={rotation} spinning={spinning} duration={duration} onSpin={spin} />}
+            {loadingShared ? <p className="selector-loading" role="status">Opening shared list…</p> : <>{theme === 'classic' && <ClassicWheel options={options} rotation={rotation} spinning={spinning} duration={duration} onSpin={spin} />}
             {theme === 'water' && <WaterWheel options={options} rotation={rotation} spinning={spinning} duration={duration} result={result} onSpin={spin} />}
-            {theme === 'ai' && <AISelector options={options} spinning={spinning} result={result} aiStep={aiStep} messageOffset={messageOffset} onSpin={spin} />}
+            {theme === 'ai' && <AISelector options={options} spinning={spinning} result={result} aiStep={aiStep} messageOffset={messageOffset} onSpin={spin} />}</>}
             {result && resultVisible && <div className="result-overlay">
               <div className="result-card" role="group" aria-label="Selection result" onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); dismissResult(); } }}>
                 <button className="result-close" onClick={dismissResult} aria-label="Dismiss result"><Icon name="close" size={16} /></button>
@@ -288,6 +350,7 @@ export default function App() {
       </section>
     </main>
     <footer className="app-footer flex items-center justify-between"><span>A little chance can change your day.</span><span>Made for indecisive humans <span className="footer-star">✳</span></span></footer>
+    {shareLink && <ShareDialog url={shareLink} onClose={() => setShareLink('')} />}
     {toast && <div className="toast flex items-center gap-3" role="status"><Icon name="check" size={18} /><span>{toast.message}</span>{toast.undo && <button disabled={busy} onClick={() => { toast.undo(); setToast(null); }}>Undo</button>}<button className="toast-close" aria-label="Dismiss notification" onClick={() => setToast(null)}><Icon name="close" size={16} /></button></div>}
   </div>;
 }

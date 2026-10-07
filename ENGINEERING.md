@@ -13,7 +13,7 @@ This document is the reference for development and future agents working on Not 
 
 - Keep option records uniquely identified; duplicate labels must remain independently removable and selectable.
 - Parse pasted input on commas and newlines, trim whitespace, and discard empty entries. Define deduplication explicitly and apply it both within pasted input and against existing labels.
-- Store the list in localStorage, with schema validation and guarded reads/writes. Storage failures must not prevent use. Never encode lists in links or send user options over the network.
+- Store the list in localStorage, with schema validation and guarded reads/writes. Storage failures must not prevent use. Do not send user options over the network. The URL-sharing POC may encode a list snapshot into a versioned, gzip-compressed base64url fragment only when the user clicks Share list. Decode and validate incoming lists before use; preserve order and duplicates, bound URL and decompressed sizes, and create fresh local option IDs. Keep OS motion and sound preferences out of shared snapshots.
 - Provide plain-text copy, export, and import. Treat labels as text, never HTML. Explain any practical limits in the interface instead of silently dropping data.
 - Keep selection logic independent of graphics. Choose a uniform random index using Web Crypto with rejection sampling. Decide the result before animation; all themes must reveal that same selected record.
 - Freeze the options snapshot during selection, prevent overlapping runs, and make cancel/reset/unmount cleanup explicit. Avoid stale timer callbacks.
@@ -36,7 +36,7 @@ This document is the reference for development and future agents working on Not 
 
 ## Verification and maintenance
 
-- Verify pure logic with native Node tests: parsing, duplicate handling, random boundaries, wheel-to-pointer geometry, and persisted-data validation.
+- Verify pure logic with native Node tests: parsing, duplicate handling, random boundaries, wheel-to-pointer geometry, and persisted-data validation, and URL-sharing round trips (including 20 names with surnames, spaces, Unicode, duplicate labels, and invalid payloads).
 - Build the production bundle and measure its size. Check the built app under a repository-style subpath as well as the development server.
 - Exercise all themes, deletion, append, duplicates, empty and single-entry states, persistence, import/export, keyboard use, and reduced motion in a browser. For desktop layout changes, check laptop and large-display viewport sizes (including 1440×800 and 2560×1300), and verify that controls and results stay visible without page scrolling. Avoid asserting a layout passes merely because overflow has been hidden: inspect the actual content bounds.
 - Document local commands, browser-only persistence, data format, and GitHub Pages deployment steps in README.md. Keep generated output and node_modules out of Git.

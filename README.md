@@ -1,6 +1,6 @@
 # Not a Sentient Wheel
 
-A small, private, static React app for letting chance make a decision. Three selectors share the same uniformly random selection engine:
+A small, static React app for letting chance make a decision. Three selectors share the same uniformly random selection engine:
 
 - **Classic wheel:** pastel pie segments, decelerating spin, right-hand pointer, and labels that are upright at the pointer.
 - **Water wheel:** an illustrated wooden mill wheel, a tipping bucket, animated water, and Felix the farmer pointing out the winner.
@@ -20,7 +20,7 @@ npm run dev
 Open the local address printed by Vite (normally **http://127.0.0.1:5173**). Click the wheel or AI assistant to select; they also work with Enter/Space. Results appear over the centre of the selector once it finishes. Use **Spin again**, close the result with its × button, or press Escape while a result control is focused. Reduced motion reveals results without the fade.
 
 ```sh
-npm test        # Selection, parsing, persistence validation, and geometry
+npm test        # Selection, parsing, persistence, geometry, and URL sharing
 npm run build  # Static production output in dist/
 npm run preview # Test the production build, normally at port 4173
 ```
@@ -35,9 +35,21 @@ npm run preview # Test the production build, normally at port 4173
 6. Use **Copy list** or **Export** to keep lists yourself. **Import** reads a `.txt`/`.csv` file and replaces the current list exactly, including intentional duplicates. Paste an old list in the input to append instead. The file format is plain text, one option per line, or comma separated; it is not a quoted CSV parser.
 7. **Motion → Full animation** is the default and shows the complete spin even when Windows or a remote desktop requests reduced motion. **Follow system** uses the operating system preference; **Reduced motion** skips spinning and ambient animation and reveals the result quickly. The choice is remembered in this browser, and cannot change during a spin. Full animations take 5 seconds for the classic wheel and AI assistant, or 6.2 seconds for the water wheel.
 
+## URL-sharing POC
+
+On branch `codex/url-sharing-poc`, click **Share list** and then **Copy link**. Open that link in another tab or browser to reconstruct the options. The browser address looks like `https://wernerscholtz.github.io/NotASentientWheel/#list=v1.COMPRESSED_DATA`; the fragment keeps GitHub Pages paths working without a backend. Local testing generates localhost links; those only work on the machine running the app. Public links will work after this branch is deployed.
+
+Links are fixed snapshots of labels in their original order, including spaces, Unicode and intentional duplicates. They do not include option IDs, the result, or personal sound/motion/theme settings. The recipient receives fresh option IDs and keeps their own preferences. Anyone with the link can reconstruct its list; compression is not encryption. No external sharing service or new dependency is used: the codec uses the browser's [native gzip compression](https://developer.mozilla.org/en-US/docs/Web/API/CompressionStream).
+
+Opening a shared link replaces the current list and saves the imported copy in this browser. A temporary **Undo** restores the previous list. Invalid or unsupported links keep the existing list and display an explanation. Editing the imported list removes its fragment from the address so a refresh keeps your edits; the original shared link still opens the original snapshot. Links also work when opening another snapshot in the same tab.
+
+The POC caps generated links at **8,000 characters** and decoded JSON at **512,000 bytes**, in addition to the app's normal option limits. Large lists may need text export instead. A current browser with `CompressionStream` and `DecompressionStream` support is required. No backend records exist to expire or revoke.
+
+For a quick check, paste 20 entries such as `Firstname Lastname1` through `Firstname Lastname20`, share, and open the copied link. `npm test` verifies exact reconstruction of that list and interoperability with independently generated gzip data.
+
 ## Data and practical limits
 
-Options never go to a server or into a URL. Browser localStorage remembers the current list; clearing browser data removes it. Different browsers, devices, and origins have independent lists. If storage or clipboard access fails, the app provides a usable fallback. Export a text file to keep a separate backup.
+Options never go to a server. Clicking **Share list** puts a compressed copy of the options into the URL fragment. Browser localStorage remembers the current list; clearing browser data removes it. Different browsers, devices, and origins have independent lists. If storage or clipboard access fails, the app provides a usable fallback. Export a text file to keep a separate backup.
 
 Up to **500 options**, each **200 characters**, are supported. Oversized batches are rejected with an explanation rather than truncated. Dense wheels use smaller/abbreviated labels (above 120 entries the slices remain, but text is omitted); the sidebar and selected result keep the full text. Commas/newlines always delimit entries. Keep commas out of individual labels.
 

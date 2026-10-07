@@ -4,6 +4,7 @@ export function Icon({ name, size = 20, ...props }) {
     arrow: <path d="M5 12h14m-5-5 5 5-5 5" />,
     trash: <><path d="M3 6h18M9 6V4h6v2M6 6l1 14h10l1-14M10 10v6M14 10v6" /></>,
     copy: <><rect x="8" y="8" width="12" height="13" rx="2" /><path d="M16 8V3H3v13h5" /></>,
+    link: <><path d="M10 13a5 5 0 0 0 7 .5l3-3a5 5 0 0 0-7-7l-2 2" /><path d="M14 11a5 5 0 0 0-7-.5l-3 3a5 5 0 0 0 7 7l2-2" /></>,
     download: <><path d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5" /></>,
     upload: <><path d="M12 16V3m-4 4 4-4 4 4M4 16v5h16v-5" /></>,
     sound: <><path d="m11 4-6 5H2v6h3l6 5V4Z" /><path d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14" /></>,
