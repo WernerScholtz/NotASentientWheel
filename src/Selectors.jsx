@@ -67,7 +67,7 @@ function SpinHub({ wooden = false, spinning, empty }) {
   return <g>
     <circle cx="300" cy="303" r="64" fill="#142e22" opacity=".12" />
     <circle cx="300" cy="300" r="61" fill={wooden ? '#775738' : '#fafbf3'} stroke={wooden ? '#583e29' : '#d8e3c8'} strokeWidth="5" />
-    <g transform="translate(288 270)" fill="none" stroke={wooden ? '#ffe4b5' : '#3a5a40'} strokeWidth="1.8" strokeLinecap="round"><path d="M20 7v5h-5M4 17v-5h5M6 6a8 8 0 0 1 14 6M4 12a8 8 0 0 0 14 6" /></g>
+    <g transform="translate(288 270)" fill="none" stroke={wooden ? '#ffe4b5' : '#3a5a40'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 9l3 3 3-3M7 15l-3-3-3 3M6 6a8 8 0 0 1 14 6M4 12a8 8 0 0 0 14 6" /></g>
     <text x="300" y="318" textAnchor="middle" fill={wooden ? '#ffe4b5' : '#294436'} fontSize="15" fontWeight="700">{empty ? 'ADD OPTIONS' : spinning ? 'SPINNING' : 'SPIN ME'}</text>
     <circle cx="300" cy="300" r="51" fill="none" stroke={wooden ? '#b38b58' : '#e4eadb'} strokeWidth="1" />
   </g>;
