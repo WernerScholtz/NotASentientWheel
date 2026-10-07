@@ -97,7 +97,7 @@ textarea:focus { border-color: #91a978; }
 .result-overlay { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; pointer-events: none; padding: 16px; }
 .result-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: auto; text-align: center; width: 25%; min-width: min(100%, 240px); max-width: 360px; max-height: 100%; overflow: auto; padding: 24px 20px 18px; border: 1px solid #ffffffd9; border-radius: 18px; background: #f7faedf2; box-shadow: 0 12px 32px #233e3129, 0 0 64px 20px #233e311c, inset 0 1px 0 #fff; animation: resultReveal 1s ease-out both; }
 @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-  .result-card { background: #f7faedb8; backdrop-filter: blur(18px) saturate(125%); -webkit-backdrop-filter: blur(18px) saturate(125%); }
+  .result-card { background: #f7faedb8; -webkit-backdrop-filter: blur(18px) saturate(125%); backdrop-filter: blur(18px) saturate(125%); }
 }
 .result-close { position: absolute; top: 8px; right: 8px; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; color: #526a4a; }
 .result-close:hover { background: #e4eddbb3; }
