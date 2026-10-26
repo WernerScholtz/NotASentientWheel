@@ -87,21 +87,23 @@ export function ClassicWheel({ options, rotation, spinning, duration, onSpin }) 
   </button>;
 }
 
-function Farmer({ pointing }) {
-  return <g className={pointing ? 'farmer farmer-pointing' : 'farmer'} transform="translate(574 408)">
+function Farmer({ pointing, dancing }) {
+  return <g className={['farmer', pointing && 'farmer-pointing', dancing && 'farmer-dancing'].filter(Boolean).join(' ')} transform="translate(574 408)">
     <ellipse cx="23" cy="151" rx="40" ry="8" fill="#385f48" opacity=".13" />
-    <path d="m9 112-4 30m29-30 6 30" stroke="#4b6447" strokeWidth="16" strokeLinecap="round" />
-    <path d="M-4 143h15m22 0h16" stroke="#5c4532" strokeWidth="11" strokeLinecap="round" />
-    <path d="M3 59q19-10 38 0l5 55H-1Z" fill="#eac593" />
-    <path d="M6 57v32h30V57m-37 57 4-32h39l4 32Z" fill="#5c7952" />
-    <rect x="12" y="88" width="20" height="15" rx="3" fill="#799466" />
-    <circle cx="22" cy="34" r="25" fill="#ecc499" />
-    <path d="M-3 29q-3-29 25-29 30 0 25 31l-10-7-14 3-12-3Z" fill="#95714d" />
-    <path d="M-14 18h72M2 14 7-8h31l7 22" stroke="#856744" strokeWidth="9" strokeLinecap="round" fill="#c3a46b" />
-    <circle cx="14" cy="34" r="2.3" fill="#3d4130" /><circle cx="31" cy="34" r="2.3" fill="#3d4130" />
-    <path d="m18 44 6 3 6-3" fill="none" stroke="#95654a" strokeWidth="2" strokeLinecap="round" />
-    <path d="m42 65 12 27" stroke="#eac593" strokeWidth="12" strokeLinecap="round" />
-    <g className="farmer-arm"><path d="M4 65-14 46-39 40" stroke="#eac593" strokeWidth="12" strokeLinecap="round" fill="none" /><path d="m-37 40-12-4" stroke="#eac593" strokeWidth="6" strokeLinecap="round" /></g>
+    <g className="farmer-leg"><path d="m9 112-4 30" stroke="#4b6447" strokeWidth="16" strokeLinecap="round" /><path d="M-4 143h15" stroke="#5c4532" strokeWidth="11" strokeLinecap="round" /></g>
+    <g className="farmer-leg farmer-leg-right"><path d="m34 112 6 30" stroke="#4b6447" strokeWidth="16" strokeLinecap="round" /><path d="M33 143h16" stroke="#5c4532" strokeWidth="11" strokeLinecap="round" /></g>
+    <g className="farmer-torso">
+      <path d="M3 59q19-10 38 0l5 55H-1Z" fill="#eac593" />
+      <path d="M6 57v32h30V57m-37 57 4-32h39l4 32Z" fill="#5c7952" />
+      <rect x="12" y="88" width="20" height="15" rx="3" fill="#799466" />
+      <circle cx="22" cy="34" r="25" fill="#ecc499" />
+      <path d="M-3 29q-3-29 25-29 30 0 25 31l-10-7-14 3-12-3Z" fill="#95714d" />
+      <path d="M-14 18h72M2 14 7-8h31l7 22" stroke="#856744" strokeWidth="9" strokeLinecap="round" fill="#c3a46b" />
+      <circle cx="14" cy="34" r="2.3" fill="#3d4130" /><circle cx="31" cy="34" r="2.3" fill="#3d4130" />
+      <path d="m18 44 6 3 6-3" fill="none" stroke="#95654a" strokeWidth="2" strokeLinecap="round" />
+      <path className="farmer-arm-right" d="M40 65 65 59 83 40" stroke="#eac593" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+      <g className="farmer-arm"><path d="M4 65-21 59-39 40" stroke="#eac593" strokeWidth="12" strokeLinecap="round" strokeLinejoin="round" fill="none" /><path d="m-38 39-8-9" stroke="#eac593" strokeWidth="6" strokeLinecap="round" /></g>
+    </g>
   </g>;
 }
 
@@ -138,7 +140,7 @@ export function WaterWheel({ options, rotation, spinning, duration, result, onSp
         <path d="M531 55h55M535 100h47" stroke="#d1d5c8" strokeWidth="5" />
         <path d="m541 52 5 51m20-51-2 52m20-51-6 50" stroke="#758279" strokeWidth="2" />
       </g>
-      <Farmer pointing={Boolean(result) && !spinning} />
+      <Farmer pointing={Boolean(result) && !spinning} dancing={spinning} />
       {result && !spinning && <g className="farmer-bubble"><rect x="524" y="349" width="148" height="36" rx="18" fill="#fcfbeb" stroke="#d8d8b8" /><path d="m599 385 9 12 3-13" fill="#fcfbeb" /><text x="598" y="372" textAnchor="middle" fontSize="13" fill="#586444" fontWeight="600">That’s the one!</text></g>}
       <g fill="#6e8e58"><path d="m82 554-9-26 17 16 5-32 8 31 12-12-5 27ZM650 565l-8-25 15 12 7-28 2 28 12-15-5 29Z" /></g>
     </svg>

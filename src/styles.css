@@ -135,8 +135,19 @@ textarea:focus { border-color: #91a978; }
 .water-running .pouring-bucket { animation: pourBucket 1.8s ease-in-out; }
 .water-running .water-stream { animation: pourWater 1.8s ease-in-out; }
 .river-ripples { animation: river 8s ease-in-out infinite alternate; }
-.farmer-arm { transform-origin: 4px 65px; transform: rotate(-65deg); transition: transform .6s; }
+.farmer-arm { transform-origin: 4px 65px; transform: rotate(-70deg); transition: transform .6s; }
 .farmer-pointing .farmer-arm { transform: rotate(35deg); }
+.farmer-arm-right { transform-origin: 40px 65px; transform: rotate(70deg); }
+.farmer-torso { transform-origin: 22px 112px; }
+.farmer-dancing .farmer-torso { animation: farmerBounce .7s ease-in-out infinite; }
+.farmer-dancing .farmer-leg { animation: farmerStep .7s ease-in-out infinite; }
+.farmer-dancing .farmer-leg-right { animation-delay: -.35s; }
+.farmer-dancing .farmer-arm { animation: farmerWave .7s ease-in-out infinite; }
+.farmer-dancing .farmer-arm-right { animation: farmerWaveRight .7s ease-in-out -.35s infinite; }
+@keyframes farmerBounce { 0%, 50%, 100% { transform: none; } 25% { transform: translateY(-6px) rotate(-5deg); } 75% { transform: translateY(-6px) rotate(5deg); } }
+@keyframes farmerStep { 0%, 50%, 100% { transform: none; } 25% { transform: translateY(-6px); } }
+@keyframes farmerWave { 0%, 100% { transform: rotate(5deg); } 50% { transform: rotate(38deg); } }
+@keyframes farmerWaveRight { 0%, 100% { transform: rotate(-5deg); } 50% { transform: rotate(-38deg); } }
 .farmer-bubble { animation: resultIn .4s ease-out; }
 
 /* The assistant: a little terminal theatre, no model or remote service. */
