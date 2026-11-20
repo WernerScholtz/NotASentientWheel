@@ -388,6 +388,8 @@ function AppearanceToggle({ darkMode, onToggle }) {
     <button className="header-button flex items-center gap-2" type="button" aria-label="Dark mode" aria-pressed={darkMode} aria-describedby="appearance-tooltip" onClick={onToggle}>
       <Icon name={darkMode ? 'sun' : 'moon'} size={18} /><span>Dark mode</span>
     </button>
-    <span id="appearance-tooltip" className="appearance-tooltip" role="tooltip" hidden={tooltipDismissed}>Enable Android Andy's Dark Mode</span>
+    <span id="appearance-tooltip" className="appearance-tooltip" role="tooltip" hidden={tooltipDismissed}>
+      {darkMode ? 'Enable the Forbidden Light Mode' : "Enable Android Andy's Dark Mode"}
+    </span>
   </div>;
 }
