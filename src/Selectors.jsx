@@ -47,29 +47,36 @@ export const AI_MESSAGES = [
   'Drafting an acceptance speech on the winner’s behalf…',
 ];
 
+const DARK_CLASSIC_COLORS = ['#395745', '#65552f', '#315b60', '#59476a', '#69453d', '#505c35', '#3a536d', '#5c4e39'];
+const WOOD_COLORS = ['#d9b682', '#b88c58', '#cfaa74', '#c39a64'];
+
 function Segments({ options, wooden = false }) {
   const count = options.length;
-  if (!count) return <circle cx="300" cy="300" r="220" fill={wooden ? '#b69062' : '#e6ecd9'} />;
+  if (!count) return <circle cx="300" cy="300" r="220" fill={wooden ? 'var(--wood-empty, #b69062)' : 'var(--wheel-empty, #e6ecd9)'} />;
+  const palette = wooden ? WOOD_COLORS : COLORS;
   return options.map((option, index) => {
-    const fill = wooden ? ['#d9b682', '#b88c58', '#cfaa74', '#c39a64'][index % 4] : COLORS[index % COLORS.length];
+    const fill = palette[index % palette.length];
+    const darkFill = wooden ? `color-mix(in srgb, ${fill} 27%, #35251d)` : DARK_CLASSIC_COLORS[index % DARK_CLASSIC_COLORS.length];
+    const segment = { className: 'wheel-segment', fill, style: { '--dark-segment': darkFill } };
     const fontSize = count > 40 ? 6 : count > 24 ? 8 : count > 16 ? 10 : count > 10 ? 12 : 15;
     return <g key={option.id}>
-      {count === 1 ? <circle cx="300" cy="300" r="220" fill={fill} /> : <path d={slicePath(index, count)} fill={fill} stroke={wooden ? '#82613b' : '#fcfcf5'} strokeWidth={count > 80 ? 0.4 : 2} />}
+      {count === 1 ? <circle cx="300" cy="300" r="220" {...segment} /> : <path d={slicePath(index, count)} {...segment} stroke={wooden ? 'var(--wood-divider, #82613b)' : 'var(--wheel-divider, #fcfcf5)'} strokeWidth={count > 80 ? 0.4 : 2} />}
       {count <= 120 && <g transform={`rotate(${index * 360 / count} 300 300)`}>
         {wooden && <path d="M375 286q42 8 100 0M379 318q48-9 111-2" fill="none" stroke="#805b38" opacity=".16" strokeWidth="2" />}
-        <text x="508" y="300" textAnchor="end" dominantBaseline="middle" fill={wooden ? '#463421' : '#294436'} fontSize={fontSize} fontWeight="600" letterSpacing="-.2">{wheelLabel(option.label, fontSize)}</text>
+        <text x="508" y="300" textAnchor="end" dominantBaseline="middle" fill={wooden ? 'var(--wood-label, #463421)' : 'var(--wheel-label, #294436)'} fontSize={fontSize} fontWeight="600" letterSpacing="-.2">{wheelLabel(option.label, fontSize)}</text>
       </g>}
     </g>;
   });
 }
 
 function SpinHub({ wooden = false, spinning, empty }) {
+  const ink = wooden ? '#ffe4b5' : 'var(--wheel-label, #294436)';
   return <g>
     <circle cx="300" cy="303" r="64" fill="#142e22" opacity=".12" />
-    <circle cx="300" cy="300" r="61" fill={wooden ? '#775738' : '#fafbf3'} stroke={wooden ? '#583e29' : '#d8e3c8'} strokeWidth="5" />
-    <g transform="translate(288 270)" fill="none" stroke={wooden ? '#ffe4b5' : '#3a5a40'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 9l3 3 3-3M7 15l-3-3-3 3M6 6a8 8 0 0 1 14 6M4 12a8 8 0 0 0 14 6" /></g>
-    <text x="300" y="318" textAnchor="middle" fill={wooden ? '#ffe4b5' : '#294436'} fontSize={empty ? 11 : 15} fontWeight="700">{empty ? 'ADD OPTIONS' : spinning ? 'SPINNING' : 'SPIN ME'}</text>
-    <circle cx="300" cy="300" r="51" fill="none" stroke={wooden ? '#b38b58' : '#e4eadb'} strokeWidth="1" />
+    <circle cx="300" cy="300" r="61" fill={wooden ? 'var(--wood-hub, #775738)' : 'var(--wheel-hub, #fafbf3)'} stroke={wooden ? '#583e29' : 'var(--wheel-rim-edge, #d8e3c8)'} strokeWidth="5" />
+    <g transform="translate(288 270)" fill="none" stroke={wooden ? ink : 'var(--wheel-label, #3a5a40)'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M17 9l3 3 3-3M7 15l-3-3-3 3M6 6a8 8 0 0 1 14 6M4 12a8 8 0 0 0 14 6" /></g>
+    <text x="300" y="318" textAnchor="middle" fill={ink} fontSize={empty ? 11 : 15} fontWeight="700">{empty ? 'ADD OPTIONS' : spinning ? 'SPINNING' : 'SPIN ME'}</text>
+    <circle cx="300" cy="300" r="51" fill="none" stroke={wooden ? '#b38b58' : 'var(--wheel-tick, #e4eadb)'} strokeWidth="1" />
   </g>;
 }
 
@@ -77,12 +84,12 @@ export function ClassicWheel({ options, rotation, spinning, duration, onSpin }) 
   return <button className="wheel-interactive classic-graphic" onClick={onSpin} disabled={spinning || !options.length} aria-label="Spin the classic wheel">
     <svg viewBox="40 40 540 520" className="wheel-svg" aria-hidden="true">
       <circle cx="300" cy="308" r="246" fill="#3d5a3c" opacity=".07" />
-      <circle cx="300" cy="300" r="244" fill="#fcfdf8" stroke="#e4e9d9" strokeWidth="1" />
-      {Array.from({ length: 72 }, (_, i) => <path key={i} d={i % 6 === 0 ? 'M300 66v7' : 'M300 68v3'} transform={`rotate(${i * 5} 300 300)`} stroke="#c0cbb2" strokeWidth={i % 6 === 0 ? 2 : 1} />)}
+      <circle cx="300" cy="300" r="244" fill="var(--wheel-rim, #fcfdf8)" stroke="var(--wheel-rim-edge, #e4e9d9)" strokeWidth="1" />
+      {Array.from({ length: 72 }, (_, i) => <path key={i} d={i % 6 === 0 ? 'M300 66v7' : 'M300 68v3'} transform={`rotate(${i * 5} 300 300)`} stroke="var(--wheel-tick, #c0cbb2)" strokeWidth={i % 6 === 0 ? 2 : 1} />)}
       <g className="rotating-wheel" style={{ transform: `rotate(${rotation}deg)`, transitionDuration: `${duration}ms` }}><Segments options={options} /></g>
-      <circle cx="300" cy="300" r="221" fill="none" stroke="#e0e7d2" strokeWidth="2" />
+      <circle cx="300" cy="300" r="221" fill="none" stroke="var(--wheel-tick, #e0e7d2)" strokeWidth="2" />
       <SpinHub spinning={spinning} empty={!options.length} />
-      <g className={spinning ? 'wheel-pointer pointer-ticking' : 'wheel-pointer'}><path d="m562 280-35 20 35 20q7 4 7-5v-30q0-9-7-5" fill="#294c38" /><circle cx="557" cy="300" r="4" fill="#d7e5ac" /></g>
+      <g className={spinning ? 'wheel-pointer pointer-ticking' : 'wheel-pointer'}><path d="m562 280-35 20 35 20q7 4 7-5v-30q0-9-7-5" fill="var(--wheel-pointer, #294c38)" /><circle cx="557" cy="300" r="4" fill="var(--wheel-pointer-dot, #d7e5ac)" /></g>
     </svg>
   </button>;
 }
@@ -111,15 +118,15 @@ export function WaterWheel({ options, rotation, spinning, duration, result, onSp
   return <button className={`wheel-interactive water-graphic ${spinning ? 'water-running' : ''}`} onClick={onSpin} disabled={spinning || !options.length} aria-label="Pour water and spin the water wheel">
     <svg viewBox="0 0 700 640" className="wheel-svg" aria-hidden="true">
       <defs>
-        <linearGradient id="river" x2="1" y2="0"><stop stopColor="#a9ced0" /><stop offset="1" stopColor="#d5e8e3" /></linearGradient>
+        <linearGradient id="river" x2="1" y2="0"><stop stopColor="var(--river-start, #a9ced0)" /><stop offset="1" stopColor="var(--river-end, #d5e8e3)" /></linearGradient>
         <pattern id="woodGrain" width="60" height="40" patternUnits="userSpaceOnUse"><path d="M0 10q15-5 30 0t30 0M0 30q15 5 30 0t30 0" stroke="#54391f" opacity=".16" fill="none" /></pattern>
       </defs>
-      <g fill="#fff" opacity=".65"><path d="M45 77q-6-21 14-24 6-27 30-20 15 2 17 23 27-3 27 21Z" /><path d="M502 109q-5-14 10-17 3-18 21-15 14 0 16 17 19-2 22 15Z" /></g>
-      <path d="M0 527q70-90 155-26t124 10q122-106 269-10t152 13v126H0Z" fill="#dbe4b6" />
+      <g fill="var(--water-cloud, #fff)" opacity=".65"><path d="M45 77q-6-21 14-24 6-27 30-20 15 2 17 23 27-3 27 21Z" /><path d="M502 109q-5-14 10-17 3-18 21-15 14 0 16 17 19-2 22 15Z" /></g>
+      <path d="M0 527q70-90 155-26t124 10q122-106 269-10t152 13v126H0Z" fill="var(--water-hill, #dbe4b6)" />
       <path d="M0 561q182-19 308 0t392-5v84H0Z" fill="url(#river)" />
-      <g className="river-ripples" stroke="#f2fbf3" strokeWidth="3" opacity=".7" strokeLinecap="round"><path d="M49 586h56m101 13h82m137-11h75m59 31h66M3 621h116m215-7h62" /></g>
+      <g className="river-ripples" stroke="var(--river-ripple, #f2fbf3)" strokeWidth="3" opacity=".7" strokeLinecap="round"><path d="M49 586h56m101 13h82m137-11h75m59 31h66M3 621h116m215-7h62" /></g>
       <path d="m298 286-95 285h194Z" stroke="#796144" strokeWidth="15" fill="#998567" />
-      <path d="m298 310-68 242h138Z" fill="#c8d3ba" />
+      <path d="m298 310-68 242h138Z" fill="var(--water-support, #c8d3ba)" />
       <circle cx="300" cy="313" r="241" fill="#61472f" opacity=".12" />
       <g className="rotating-wheel water-rotating" style={{ transform: `rotate(${rotation}deg)`, transitionDuration: `${Math.max(0, duration - 650)}ms`, transitionDelay: spinning ? '650ms' : '0ms' }}>
         <circle cx="300" cy="300" r="246" fill="#745432" stroke="#543d28" strokeWidth="5" />
@@ -141,8 +148,8 @@ export function WaterWheel({ options, rotation, spinning, duration, result, onSp
         <path d="m541 52 5 51m20-51-2 52m20-51-6 50" stroke="#758279" strokeWidth="2" />
       </g>
       <Farmer pointing={Boolean(result) && !spinning} dancing={spinning} />
-      {result && !spinning && <g className="farmer-bubble"><rect x="524" y="349" width="148" height="36" rx="18" fill="#fcfbeb" stroke="#d8d8b8" /><path d="m599 385 9 12 3-13" fill="#fcfbeb" /><text x="598" y="372" textAnchor="middle" fontSize="13" fill="#586444" fontWeight="600">That’s the one!</text></g>}
-      <g fill="#6e8e58"><path d="m82 554-9-26 17 16 5-32 8 31 12-12-5 27ZM650 565l-8-25 15 12 7-28 2 28 12-15-5 29Z" /></g>
+      {result && !spinning && <g className="farmer-bubble"><rect x="524" y="349" width="148" height="36" rx="18" fill="var(--water-bubble, #fcfbeb)" stroke="var(--water-bubble-edge, #d8d8b8)" /><path d="m599 385 9 12 3-13" fill="var(--water-bubble, #fcfbeb)" /><text x="598" y="372" textAnchor="middle" fontSize="13" fill="var(--water-bubble-text, #586444)" fontWeight="600">That’s the one!</text></g>}
+      <g fill="var(--water-grass, #6e8e58)"><path d="m82 554-9-26 17 16 5-32 8 31 12-12-5 27ZM650 565l-8-25 15 12 7-28 2 28 12-15-5 29Z" /></g>
     </svg>
   </button>;
 }

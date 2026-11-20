@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Icon } from './Icons.jsx';
 import { AI_MESSAGES, AISelector, ClassicWheel, WaterWheel } from './Selectors.jsx';
 import { SoundEngine } from './audio.js';
@@ -25,6 +25,7 @@ function loadInitial() {
   return {
     options: saved ? validateSavedList(saved) : makeOptions(SAMPLE_LABELS),
     theme: THEMES.some(theme => theme.id === saved?.theme) ? saved.theme : 'classic',
+    darkMode: saved?.darkMode === true,
     sound: typeof saved?.sound === 'boolean' ? saved.sound : true,
     allowDuplicates: saved?.allowDuplicates === true,
     motionPreference: ['system', 'full', 'reduced'].includes(saved?.motionPreference) ? saved.motionPreference : 'full',
@@ -43,6 +44,7 @@ export default function App() {
   const [initial] = useState(loadInitial);
   const [options, setOptions] = useState(initial.options);
   const [theme, setTheme] = useState(initial.theme);
+  const [darkMode, setDarkMode] = useState(initial.darkMode);
   const [sound, setSound] = useState(initial.sound);
   const [allowDuplicates, setAllowDuplicates] = useState(initial.allowDuplicates);
   const [input, setInput] = useState('');
@@ -80,6 +82,10 @@ export default function App() {
   const mounted = useRef(true);
   const busy = spinning || importing || loadingShared;
   const currentTheme = THEMES.find(item => item.id === theme);
+
+  useLayoutEffect(() => {
+    document.documentElement.dataset.appearance = darkMode ? 'dark' : 'light';
+  }, [darkMode]);
 
   useEffect(() => {
     mounted.current = true;
@@ -140,9 +146,9 @@ export default function App() {
   useEffect(() => {
     if (loadingShared) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, options, theme, sound, allowDuplicates, motionPreference }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, options, theme, darkMode, sound, allowDuplicates, motionPreference }));
     } catch { setStorageWarning('Browser storage is unavailable. Copy or export your list to keep it.'); }
-  }, [options, theme, sound, allowDuplicates, motionPreference, loadingShared]);
+  }, [options, theme, darkMode, sound, allowDuplicates, motionPreference, loadingShared]);
 
   function notify(message, undo = null) {
     clearTimeout(toastTimer.current);
@@ -306,7 +312,11 @@ export default function App() {
     <header className="app-header flex items-center justify-between gap-4">
       <a className="brand flex items-center gap-3" href="./" aria-label="Not a Sentient Wheel home"><span className="brand-mark"><img src={`${import.meta.env.BASE_URL}brand-icon.png`} width="46" height="46" alt="" /></span><span className="brand-name">not a sentient<span>wheel<span className="brand-period">.</span></span></span></a>
       <span className="header-tagline">Less overthinking. More possibility.</span>
-      <div className="header-actions flex items-center gap-4"><label className="motion-control flex items-center gap-2"><span>Motion</span><select aria-label="Animation preference" value={motionPreference} onChange={event => setMotionPreference(event.target.value)} disabled={busy} title={`Your system requests ${systemReducedMotion ? 'reduced motion' : 'full animations'}. Choose Full animation to override it.`}><option value="system">Follow system</option><option value="full">Full animation</option><option value="reduced">Reduced motion</option></select></label><button className="sound-button flex items-center gap-2" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Mute sound effects' : 'Enable sound effects'}><Icon name={sound ? 'sound' : 'muted'} size={18} /><span>Sound {sound ? 'on' : 'off'}</span></button></div>
+      <div className="header-actions flex items-center gap-4">
+        <label className="motion-control flex items-center gap-2"><span>Motion</span><select aria-label="Animation preference" value={motionPreference} onChange={event => setMotionPreference(event.target.value)} disabled={busy} title={`Your system requests ${systemReducedMotion ? 'reduced motion' : 'full animations'}. Choose Full animation to override it.`}><option value="system">Follow system</option><option value="full">Full animation</option><option value="reduced">Reduced motion</option></select></label>
+        <button className="header-button flex items-center gap-2" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Mute sound effects' : 'Enable sound effects'}><Icon name={sound ? 'sound' : 'muted'} size={18} /><span>Sound {sound ? 'on' : 'off'}</span></button>
+        <AppearanceToggle darkMode={darkMode} onToggle={() => setDarkMode(current => !current)} />
+      </div>
     </header>
 
     <main className="workspace">
@@ -359,5 +369,25 @@ export default function App() {
     <footer className="app-footer flex items-center justify-between"><span>A little chance can change your day.</span><span>Made for indecisive humans <span className="footer-star">✳</span></span></footer>
     {shareLink && <ShareDialog url={shareLink} onClose={() => setShareLink('')} />}
     {toast && <div className="toast flex items-center gap-3" role="status"><Icon name="check" size={18} /><span>{toast.message}</span>{toast.undo && <button disabled={busy} onClick={() => { toast.undo(); setToast(null); }}>Undo</button>}<button className="toast-close" aria-label="Dismiss notification" onClick={() => setToast(null)}><Icon name="close" size={16} /></button></div>}
+  </div>;
+}
+
+function AppearanceToggle({ darkMode, onToggle }) {
+  const [tooltipDismissed, setTooltipDismissed] = useState(false);
+  const toggle = useRef(null);
+
+  useEffect(() => {
+    function dismissTooltip(event) {
+      if (event.key === 'Escape' && toggle.current.matches(':hover, :focus-within')) setTooltipDismissed(true);
+    }
+    window.addEventListener('keydown', dismissTooltip);
+    return () => window.removeEventListener('keydown', dismissTooltip);
+  }, []);
+
+  return <div className="appearance-toggle" ref={toggle} onPointerEnter={() => setTooltipDismissed(false)} onFocus={() => setTooltipDismissed(false)}>
+    <button className="header-button flex items-center gap-2" type="button" aria-label="Dark mode" aria-pressed={darkMode} aria-describedby="appearance-tooltip" onClick={onToggle}>
+      <Icon name={darkMode ? 'sun' : 'moon'} size={18} /><span>Dark mode</span>
+    </button>
+    <span id="appearance-tooltip" className="appearance-tooltip" role="tooltip" hidden={tooltipDismissed}>Enable Android Andy's Dark Mode</span>
   </div>;
 }

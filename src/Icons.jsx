@@ -9,6 +9,8 @@ export function Icon({ name, size = 20, ...props }) {
     upload: <><path d="M12 16V3m-4 4 4-4 4 4M4 16v5h16v-5" /></>,
     sound: <><path d="m11 4-6 5H2v6h3l6 5V4Z" /><path d="M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14" /></>,
     muted: <><path d="m11 4-6 5H2v6h3l6 5V4Z" /><path d="m16 9 5 6m0-6-5 6" /></>,
+    moon: <path d="M20.9 13.35A9 9 0 0 1 10.65 3.1a9 9 0 1 0 10.25 10.25Z" />,
+    sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4m0-14.2-1.4 1.4M6.3 17.7l-1.4 1.4" /></>,
     wheel: <><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="2" /><path d="M12 3v7m0 4v7M3 12h7m4 0h7M5.6 5.6l5 5m3 3 4.8 4.8M5.6 18.4l5-5m3-3 4.8-4.8" /></>,
     water: <><path d="M12 2C9 7 5 10 5 14a7 7 0 0 0 14 0c0-4-4-7-7-12Z" /><path d="M8 14a4 4 0 0 0 4 4" /></>,
     sparkles: <><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3ZM20 2v4m-2-2h4" /></>,
