@@ -35,9 +35,9 @@ npm run preview # Test the production build, normally at port 4173
 6. Use **Copy list** or **Export** to keep lists yourself. **Import** reads a `.txt`/`.csv` file and replaces the current list exactly, including intentional duplicates. Paste an old list in the input to append instead. The file format is plain text, one option per line, or comma separated; it is not a quoted CSV parser.
 7. **Motion → Full animation** is the default and shows the complete spin even when Windows or a remote desktop requests reduced motion. **Follow system** uses the operating system preference; **Reduced motion** skips spinning and ambient animation and reveals the result quickly. The choice is remembered in this browser, and cannot change during a spin. Full animations take 5 seconds for the classic wheel and AI assistant, or 6.2 seconds for the water wheel.
 
-## URL-sharing POC
+## Share a list by URL
 
-On branch `codex/url-sharing-poc`, click **Share list** and then **Copy link**. Open that link in another tab or browser to reconstruct the options. The browser address looks like `https://wernerscholtz.github.io/NotASentientWheel/#list=v1.COMPRESSED_DATA`; the fragment keeps GitHub Pages paths working without a backend. Local testing generates localhost links; those only work on the machine running the app. Public links will work after this branch is deployed.
+On the [live app](https://wernerscholtz.github.io/NotASentientWheel/), click **Share list** and then **Copy link**. Open the link in another tab or browser to load the options. A shared URL looks like `https://wernerscholtz.github.io/NotASentientWheel/#list=v1.COMPRESSED_DATA`. The list is stored in the URL fragment, so the browser can reconstruct it without a backend. Links generated during local testing point to the local server and only work on the machine running it.
 
 Links are fixed snapshots of labels in their original order, including spaces, Unicode and intentional duplicates. They do not include option IDs, the result, or personal sound/motion/theme settings. The recipient receives fresh option IDs and keeps their own preferences. Anyone with the link can reconstruct its list; compression is not encryption. No external sharing service or new dependency is used: the codec uses the browser's [native gzip compression](https://developer.mozilla.org/en-US/docs/Web/API/CompressionStream).
 
@@ -45,7 +45,7 @@ Opening a shared link replaces the current list and saves the imported copy in t
 
 The classic and water wheels start at a randomly chosen orientation when the page opens or refreshes, including shared links. List order stays the same. The starting position is separate from winner selection, and is not saved in the shared URL. A refresh can occasionally choose the same starting position again.
 
-The POC caps generated links at **8,000 characters** and decoded JSON at **512,000 bytes**, in addition to the app's normal option limits. Large lists may need text export instead. A current browser with `CompressionStream` and `DecompressionStream` support is required. No backend records exist to expire or revoke.
+Shared links are limited to **8,000 characters** and **512,000 bytes** of decoded JSON, in addition to the app's normal option limits. Large lists may need text export instead. A current browser with `CompressionStream` and `DecompressionStream` support is required. No backend records exist to expire or revoke.
 
 For a quick check, paste 20 entries such as `Firstname Lastname1` through `Firstname Lastname20`, share, and open the copied link. `npm test` verifies exact reconstruction of that list and interoperability with independently generated gzip data.
 
@@ -67,7 +67,7 @@ The previous header mark is preserved in `public/brand-icon-original.svg`; its o
 
 The app is ready for static hosting; it has no backend and uses relative asset paths, as described in the [Vite production guide](https://vite.dev/guide/build). Tailwind is compiled at build time following its [Vite integration](https://tailwindcss.com/docs/installation/using-vite). React and React DOM are the only production dependencies. No fonts, images, audio, or scripts are fetched from external services at runtime.
 
-The workflow in `.github/workflows/deploy.yml` runs on pushes to `master` and can also be started manually from GitHub's Actions tab. It installs the locked dependencies with `npm ci`, runs the tests, builds the app, and deploys only `dist/` to GitHub Pages. A failed test or build prevents deployment.
+The workflow in `.github/workflows/deploy.yml` installs the locked dependencies with `npm ci`, runs the tests, and builds the app. Pull requests targeting `master` run these checks before merge. Pushes to `master` and manual runs from GitHub's Actions tab also upload `dist/` and deploy it to GitHub Pages after a successful build.
 
 Set **Settings → Pages → Build and deployment → Source** to **GitHub Actions**. The project URL is [https://wernerscholtz.github.io/NotASentientWheel/](https://wernerscholtz.github.io/NotASentientWheel/). Do not deploy the repository root directly: its `index.html` references development JSX that requires Vite's build step. The build replaces that reference with compiled assets using paths relative to the project URL.
 
