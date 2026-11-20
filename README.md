@@ -1,6 +1,8 @@
 # Not a Sentient Wheel
 
-A small, static React app for letting chance make a decision. Three selectors share the same uniformly random selection engine:
+A small, static React app for letting chance make a decision. Play it on [GitHub Pages](https://wernerscholtz.github.io/NotASentientWheel/).
+
+Three selectors share the same uniformly random selection engine:
 
 - **Classic wheel:** pastel pie segments, decelerating spin, right-hand pointer, and labels that are upright at the pointer.
 - **Water wheel:** an illustrated wooden mill wheel, a tipping bucket, animated water, and Felix the farmer pointing out the winner.
