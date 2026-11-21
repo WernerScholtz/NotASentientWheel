@@ -18,7 +18,9 @@ export function Icon({ name, size = 20, ...props }) {
     check: <path d="m5 12 4 4L19 6" />,
     refresh: <path d="M17 9l3 3 3-3M7 15l-3-3-3 3M6 6a8 8 0 0 1 14 6M4 12a8 8 0 0 0 14 6" />,
     leaf: <><path d="M20 3c-9 0-16 2-16 9a7 7 0 0 0 7 7c7 0 9-7 9-16Z" /><path d="m4 21 11-11" /></>,
+    motion: <><path d="M4 12a8 8 0 0 1 8-8" /><path d="M7.5 12A4.5 4.5 0 0 1 12 7.5" /><circle cx="12" cy="12" r="2.2" /><path d="M20 12a8 8 0 0 1-8 8" /></>,
+    play: <path d="m8 5.5 10 6.5-10 6.5V5.5Z" />,
     close: <path d="m6 6 12 12M6 18 18 6" />,
   };
-  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>{paths[name] || paths.sparkles}</svg>;
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>{paths[name] || paths.sparkles}</svg>;
 }

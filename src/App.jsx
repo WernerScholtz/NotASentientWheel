@@ -4,13 +4,20 @@ import { AI_MESSAGES, AISelector, ClassicWheel, WaterWheel } from './Selectors.j
 import { SoundEngine } from './audio.js';
 import { ShareDialog } from './ShareDialog.jsx';
 import { clearSharedListHash, createShareLink, hasSharedList, readSharedList } from './sharing.js';
-import { COLORS, MAX_LABEL_LENGTH, MAX_OPTIONS, SAMPLE_LABELS, STORAGE_KEY, makeOptions, mergeLabels, nextRotation, parseOptions, randomIndex, randomStartingRotation, validateSavedList } from './logic.js';
+import { COLORS, DARK_COLORS, MAX_LABEL_LENGTH, MAX_OPTIONS, SAMPLE_LABELS, STORAGE_KEY, makeOptions, mergeLabels, nextRotation, parseOptions, randomIndex, randomStartingRotation, validateSavedList } from './logic.js';
 
 const THEMES = [
   { id: 'classic', name: 'Classic wheel', icon: 'wheel', caption: 'A timeless spin on making up your mind.' },
   { id: 'water', name: 'Water wheel', icon: 'water', caption: 'A little water. A little luck. An honest day’s choosing.' },
   { id: 'ai', name: 'AI assistant', icon: 'sparkles', caption: 'Big assistant energy. Absolutely no actual intelligence.' },
 ];
+
+function formatOdds(count) {
+  if (!count) return 'Ready for possibilities';
+  const pct = 100 / count;
+  const pctLabel = Number.isInteger(pct) ? String(pct) : pct >= 1 ? pct.toFixed(1) : pct.toFixed(2);
+  return `${count} option${count === 1 ? '' : 's'} · ${pctLabel}% each`;
+}
 
 function loadInitial() {
   let saved;
@@ -121,6 +128,7 @@ export default function App() {
       setSpinning(false);
       setLoadingShared(true);
       setResult(null);
+      setResultVisible(false);
       setDuration(0);
       setRotation(0);
       const previous = optionsRef.current;
@@ -163,6 +171,7 @@ export default function App() {
     clearSharedListHash();
     setOptions(next);
     setResult(null);
+    setResultVisible(false);
     setDuration(0);
     setRotation(0);
   }
@@ -186,6 +195,7 @@ export default function App() {
     if (running.current) return;
     setTheme(next);
     setResult(null);
+    setResultVisible(false);
     setDuration(0);
     setRotation(0);
   }
@@ -310,53 +320,142 @@ export default function App() {
 
   return <div className="app-shell" data-motion={reducedMotion ? 'reduced' : 'full'}>
     <header className="app-header flex items-center justify-between gap-4">
-      <a className="brand flex items-center gap-3" href="./" aria-label="Not a Sentient Wheel home"><span className="brand-mark"><img src={`${import.meta.env.BASE_URL}brand-icon.png`} width="46" height="46" alt="" /></span><span className="brand-name">not a sentient<span>wheel<span className="brand-period">.</span></span></span></a>
-      <span className="header-tagline">Less overthinking. More possibility.</span>
-      <div className="header-actions flex items-center gap-4">
-        <label className="motion-control flex items-center gap-2"><span>Motion</span><select aria-label="Animation preference" value={motionPreference} onChange={event => setMotionPreference(event.target.value)} disabled={busy} title={`Your system requests ${systemReducedMotion ? 'reduced motion' : 'full animations'}. Choose Full animation to override it.`}><option value="system">Follow system</option><option value="full">Full animation</option><option value="reduced">Reduced motion</option></select></label>
-        <button className="header-button flex items-center gap-2" onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Mute sound effects' : 'Enable sound effects'}><Icon name={sound ? 'sound' : 'muted'} size={18} /><span>Sound {sound ? 'on' : 'off'}</span></button>
+      <div className="brand-group flex items-center gap-4">
+        <a className="brand flex items-center gap-3" href="./" aria-label="Not a Sentient Wheel home">
+          <span className="brand-mark"><img src={`${import.meta.env.BASE_URL}brand-icon.png`} width="42" height="42" alt="" /></span>
+          <span className="brand-name">not a sentient<span>wheel<span className="brand-period">.</span></span></span>
+        </a>
+        <span className="header-divider" aria-hidden="true" />
+        <span className="header-tagline">Less overthinking. More possibility.</span>
+      </div>
+      <div className="header-actions flex items-center gap-2.5">
+        <label className="motion-control flex items-center gap-2">
+          <Icon name="motion" size={15} />
+          <span className="motion-label">Motion</span>
+          <select aria-label="Animation preference" value={motionPreference} onChange={event => setMotionPreference(event.target.value)} disabled={busy} title={`Your system requests ${systemReducedMotion ? 'reduced motion' : 'full animations'}. Choose Full animation to override it.`}>
+            <option value="system">Follow system</option>
+            <option value="full">Full animation</option>
+            <option value="reduced">Reduced motion</option>
+          </select>
+        </label>
+        <button className={`header-button flex items-center gap-2 ${sound ? 'is-active' : ''}`} onClick={toggleSound} aria-pressed={sound} aria-label={sound ? 'Mute sound effects' : 'Enable sound effects'}>
+          <Icon name={sound ? 'sound' : 'muted'} size={16} />
+          <span>Sound {sound ? 'on' : 'off'}</span>
+        </button>
         <AppearanceToggle darkMode={darkMode} onToggle={() => setDarkMode(current => !current)} />
       </div>
     </header>
 
     <main className="workspace">
       <aside className="options-panel">
-        <div className="panel-heading flex items-center justify-between"><h1>Your possibilities</h1><span className="count-badge">{options.length}</span></div>
-
-        <label htmlFor="options-input" className="field-label">Add your options</label>
-        <textarea ref={textarea} id="options-input" placeholder={'Coffee break\nGo for a walk\nOr anything, really…'} value={input} onChange={event => setInput(event.target.value)} disabled={busy} onKeyDown={event => { if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); addOptions(); } }} aria-describedby="input-help" />
-        <p id="input-help" className="input-help">One per line, or separated by commas.</p>
-        <div className="flex items-center justify-between gap-2 duplicate-row"><label className="checkbox-label flex items-center gap-2"><input type="checkbox" checked={allowDuplicates} onChange={event => setAllowDuplicates(event.target.checked)} disabled={busy} />Allow duplicates</label><span className="keyboard-shortcut" title="Control or Command plus Enter to add">⌘ / Ctrl ↵</span></div>
-        <button className="add-button flex items-center justify-center gap-2" onClick={() => addOptions()} disabled={busy || !input.trim()}><Icon name="plus" size={18} />Add to the wheel</button>
-
-        <div className="list-heading flex items-center justify-between"><h2>ON THE WHEEL <span>{options.length}</span></h2><button onClick={clearList} disabled={busy || !options.length} className="text-button">Clear all</button></div>
-        <div className="option-list" role="list" aria-label="Options on the wheel" aria-busy={busy}>
-          {options.map((option, index) => <div className="option-row flex items-center gap-3" role="listitem" key={option.id}><span className="option-dot" style={{ backgroundColor: COLORS[index % COLORS.length] }} /><span className="option-label" title={option.label}>{option.label}</span><button className="delete-button" onClick={() => removeOption(option)} disabled={busy} aria-label={`Delete ${option.label}`}><Icon name="close" size={15} /></button></div>)}
-          {!options.length && <div className="empty-list"><Icon name="leaf" size={28} /><p>A world of possibilities.<br />An empty list, for now.</p><button className="text-button" onClick={() => updateOptions(makeOptions(SAMPLE_LABELS))} disabled={busy}>Try an example list <span aria-hidden="true">↗</span></button></div>}
+        <div className="panel-heading flex items-center justify-between gap-2">
+          <h1>Your possibilities</h1>
+          <span className="count-badge" title={`${options.length} of ${MAX_OPTIONS} options`}>{options.length}</span>
         </div>
 
-        <div className="list-tools"><button onClick={shareList} disabled={busy || sharing || !options.length} className="share-button utility-button flex items-center justify-center gap-2"><Icon name="link" size={15} />{sharing ? 'Creating link…' : 'Share list'}</button><div className="flex gap-2"><button onClick={copyList} disabled={!options.length || busy} className="utility-button flex items-center justify-center gap-2"><Icon name="copy" size={15} />Copy list</button><button onClick={exportList} disabled={!options.length} className="utility-button flex items-center justify-center gap-2"><Icon name="download" size={15} />Export</button></div><button onClick={() => importInput.current?.click()} disabled={busy} className="import-button flex items-center justify-center gap-2" aria-label="Import a previous list" title="Import a previous list from a text file"><Icon name="upload" size={15} />Import</button><input className="sr-only" ref={importInput} type="file" accept=".txt,.csv,text/plain,text/csv" onChange={importList} tabIndex={-1} aria-label="Import options text file" /><p className="import-help">Import replaces the list. Paste to append.</p></div>
-        <div className={`storage-note flex items-start gap-2 ${storageWarning ? 'storage-error' : ''}`}><Icon name="shield" size={17} /><p>{storageWarning || <>Saved in this browser.<br />{' '}No accounts. Share only when you choose.</>}</p></div>
+        <div className="composer-block">
+          <div className="flex items-center justify-between gap-2 composer-top">
+            <label htmlFor="options-input" className="field-label">Add your options</label>
+            <span className="keyboard-shortcut" title="Control or Command plus Enter to add">⌘ / Ctrl ↵</span>
+          </div>
+          <textarea ref={textarea} id="options-input" placeholder={'Coffee break\nGo for a walk\nOr anything, really…'} value={input} onChange={event => setInput(event.target.value)} disabled={busy} onKeyDown={event => { if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); addOptions(); } }} aria-describedby="input-help" />
+          <div className="composer-meta">
+            <p id="input-help" className="input-help">One per line, or comma separated.</p>
+            <label className="checkbox-label flex items-center gap-2">
+              <input type="checkbox" checked={allowDuplicates} onChange={event => setAllowDuplicates(event.target.checked)} disabled={busy} />
+              <span>Allow duplicates</span>
+            </label>
+          </div>
+          <button className="add-button flex items-center justify-center gap-2" onClick={() => addOptions()} disabled={busy || !input.trim()}>
+            <Icon name="plus" size={16} />
+            <span>Add to the wheel</span>
+          </button>
+        </div>
+
+        <div className="list-heading flex items-center justify-between">
+          <h2>ON THE WHEEL <span>{options.length}</span></h2>
+          <button onClick={clearList} disabled={busy || !options.length} className="text-button">Clear all</button>
+        </div>
+
+        <div className="option-list" role="list" aria-label="Options on the wheel" aria-busy={busy}>
+          {options.map((option, index) => {
+            const isWinner = Boolean(result && !spinning && result.id === option.id);
+            return <div className={`option-row flex items-center gap-2.5 ${isWinner ? 'is-winner' : ''}`} role="listitem" key={option.id}>
+              <span className="option-dot" style={{ '--dot-light': COLORS[index % COLORS.length], '--dot-dark': DARK_COLORS[index % DARK_COLORS.length] }} />
+              <span className="option-label" title={option.label}>{option.label}</span>
+              {isWinner && <span className="winner-pill" aria-hidden="true"><Icon name="sparkles" size={11} /></span>}
+              <button className="delete-button" onClick={() => removeOption(option)} disabled={busy} aria-label={`Delete ${option.label}`}><Icon name="close" size={14} /></button>
+            </div>;
+          })}
+          {!options.length && <div className="empty-list">
+            <span className="empty-icon"><Icon name="leaf" size={24} /></span>
+            <p>A world of possibilities.<br />An empty list, for now.</p>
+            <button className="empty-cta" onClick={() => updateOptions(makeOptions(SAMPLE_LABELS))} disabled={busy}>Load sample options <span aria-hidden="true">↗</span></button>
+          </div>}
+        </div>
+
+        <div className="list-tools">
+          <button onClick={shareList} disabled={busy || sharing || !options.length} className="share-button utility-button flex items-center justify-center gap-2">
+            <Icon name="link" size={15} />
+            <span>{sharing ? 'Creating link…' : 'Share list'}</span>
+          </button>
+          <div className="flex gap-2">
+            <button onClick={copyList} disabled={!options.length || busy} className="utility-button flex items-center justify-center gap-1.5" title="Copy list to clipboard">
+              <Icon name="copy" size={14} /><span>Copy</span>
+            </button>
+            <button onClick={exportList} disabled={!options.length} className="utility-button flex items-center justify-center gap-1.5" title="Download list as .txt">
+              <Icon name="download" size={14} /><span>Export</span>
+            </button>
+          </div>
+          <button onClick={() => importInput.current?.click()} disabled={busy} className="import-button flex items-center justify-center gap-1.5" aria-label="Import a previous list" title="Import a previous list from a text file">
+            <Icon name="upload" size={14} /><span>Import</span>
+          </button>
+          <input className="sr-only" ref={importInput} type="file" accept=".txt,.csv,text/plain,text/csv" onChange={importList} tabIndex={-1} aria-label="Import options text file" />
+          <p className="import-help">Import replaces the list. Paste above to append.</p>
+        </div>
+
+        <div className={`storage-note flex items-start gap-2 ${storageWarning ? 'storage-error' : ''}`}>
+          <Icon name="shield" size={15} />
+          <p>{storageWarning || 'Saved locally in this browser. No accounts or tracking.'}</p>
+        </div>
       </aside>
 
       <section className={`selector-panel theme-${theme}`} aria-label="Random selector">
-        <div className="theme-tabs flex" role="group" aria-label="Selector style">{THEMES.map(item => <button key={item.id} onClick={() => changeTheme(item.id)} disabled={busy} aria-pressed={theme === item.id} className={`theme-tab flex items-center justify-center gap-2 ${theme === item.id ? 'active' : ''}`}><Icon name={item.icon} size={17} />{item.name}{item.id === 'ai' && <span className="new-badge">ISH</span>}</button>)}</div>
+        <div className="theme-tabs flex" role="group" aria-label="Selector style">
+          {THEMES.map(item => (
+            <button key={item.id} onClick={() => changeTheme(item.id)} disabled={busy} aria-pressed={theme === item.id} className={`theme-tab flex items-center justify-center gap-2 ${theme === item.id ? 'active' : ''}`}>
+              <Icon name={item.icon} size={16} />
+              <span>{item.name}</span>
+              {item.id === 'ai' && <span className="new-badge">ISH</span>}
+            </button>
+          ))}
+        </div>
 
-        <div className="selection-stage">
-          <div className="stage-grid" /><div className="ambient-blob blob-one" /><div className="ambient-blob blob-two" />
-          <div className="stage-top flex items-center justify-between"><span className="stage-caption"><span className="status-dot" />{theme === 'classic' ? 'THE ORIGINAL CHANCE MACHINE' : theme === 'water' ? 'POWERED BY WATER & WHIMSY' : 'YOUR VERY ARTIFICIAL ASSISTANT'}</span><span className="odds-badge">{options.length ? `${options.length} option${options.length === 1 ? '' : 's'} · equal chances` : 'Ready for possibilities'}</span></div>
+        <div className={`selection-stage ${spinning ? 'stage-spinning' : ''}`}>
+          <div className="stage-grid" />
+          <div className="ambient-blob blob-one" />
+          <div className="ambient-blob blob-two" />
+          <div className="stage-top flex items-center justify-between">
+            <span className="stage-caption">
+              <span className={`status-dot ${spinning ? 'is-live' : ''}`} />
+              {theme === 'classic' ? 'THE ORIGINAL CHANCE MACHINE' : theme === 'water' ? 'POWERED BY WATER & WHIMSY' : 'YOUR VERY ARTIFICIAL ASSISTANT'}
+            </span>
+            <span className="odds-badge">{formatOdds(options.length)}</span>
+          </div>
           <div className="graphic-wrap" ref={graphic}>
-            {loadingShared ? <p className="selector-loading" role="status">Opening shared list…</p> : <>{theme === 'classic' && <ClassicWheel options={options} rotation={rotation} spinning={spinning} duration={duration} onSpin={spin} />}
-            {theme === 'water' && <WaterWheel options={options} rotation={rotation} spinning={spinning} duration={duration} result={result} onSpin={spin} />}
-            {theme === 'ai' && <AISelector options={options} spinning={spinning} result={result} aiStep={aiStep} messageOffset={messageOffset} onSpin={spin} />}</>}
+            {loadingShared ? <p className="selector-loading" role="status">Opening shared list…</p> : <>
+              {theme === 'classic' && <ClassicWheel options={options} rotation={rotation} spinning={spinning} duration={duration} onSpin={spin} />}
+              {theme === 'water' && <WaterWheel options={options} rotation={rotation} spinning={spinning} duration={duration} result={result} onSpin={spin} />}
+              {theme === 'ai' && <AISelector options={options} spinning={spinning} result={result} aiStep={aiStep} messageOffset={messageOffset} onSpin={spin} />}
+            </>}
             {result && resultVisible && <div className="result-overlay">
               <div className="result-card" role="group" aria-label="Selection result" onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); dismissResult(); } }}>
                 <button className="result-close" onClick={dismissResult} aria-label="Dismiss result"><Icon name="close" size={16} /></button>
-                <span className="result-icon" aria-hidden="true"><Icon name="sparkles" size={23} /></span>
+                <span className="result-icon" aria-hidden="true"><Icon name="sparkles" size={22} /></span>
                 <p className="result-kicker">THE UNIVERSE HAS SPOKEN</p>
                 <p className="result-text">{result.label}</p>
-                <span className="chosen-badge">The chosen one <Icon name="check" size={14} /></span>
-                <button className="result-again inline-flex items-center justify-center gap-2" onClick={spin} disabled={busy}><Icon name="refresh" size={15} />Spin again</button>
+                <span className="chosen-badge"><Icon name="check" size={13} /> The chosen one</span>
+                <button className="result-again inline-flex items-center justify-center gap-2" onClick={spin} disabled={busy}><Icon name="refresh" size={15} /><span>Spin again</span></button>
               </div>
             </div>}
           </div>
@@ -366,9 +465,19 @@ export default function App() {
         <p className="theme-caption">{currentTheme.caption}</p>
       </section>
     </main>
-    <footer className="app-footer flex items-center justify-between"><span>A little chance can change your day.</span><span>Made for indecisive humans <span className="footer-star">✳</span></span></footer>
+
+    <footer className="app-footer flex items-center justify-between">
+      <span>A little chance can change your day.</span>
+      <span>Made for indecisive humans <span className="footer-star">✳</span></span>
+    </footer>
+
     {shareLink && <ShareDialog url={shareLink} onClose={() => setShareLink('')} />}
-    {toast && <div className="toast flex items-center gap-3" role="status"><Icon name="check" size={18} /><span>{toast.message}</span>{toast.undo && <button disabled={busy} onClick={() => { toast.undo(); setToast(null); }}>Undo</button>}<button className="toast-close" aria-label="Dismiss notification" onClick={() => setToast(null)}><Icon name="close" size={16} /></button></div>}
+    {toast && <div className="toast flex items-center gap-3" role="status">
+      <span className="toast-icon" aria-hidden="true"><Icon name="check" size={15} /></span>
+      <span>{toast.message}</span>
+      {toast.undo && <button className="toast-undo" disabled={busy} onClick={() => { toast.undo(); setToast(null); }}>Undo</button>}
+      <button className="toast-close" aria-label="Dismiss notification" onClick={() => setToast(null)}><Icon name="close" size={15} /></button>
+    </div>}
   </div>;
 }
 
@@ -386,7 +495,8 @@ function AppearanceToggle({ darkMode, onToggle }) {
 
   return <div className="appearance-toggle" ref={toggle} onPointerEnter={() => setTooltipDismissed(false)} onFocus={() => setTooltipDismissed(false)}>
     <button className="header-button flex items-center gap-2" type="button" aria-label="Dark mode" aria-pressed={darkMode} aria-describedby="appearance-tooltip" onClick={onToggle}>
-      <Icon name={darkMode ? 'sun' : 'moon'} size={18} /><span>Dark mode</span>
+      <Icon name={darkMode ? 'sun' : 'moon'} size={16} />
+      <span>{darkMode ? 'Light' : 'Dark'}</span>
     </button>
     <span id="appearance-tooltip" className="appearance-tooltip" role="tooltip" hidden={tooltipDismissed}>
       {darkMode ? 'Enable the Forbidden Light Mode' : "Enable Android Andy's Dark Mode"}

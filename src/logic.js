@@ -2,7 +2,8 @@ export const STORAGE_KEY = 'not-a-sentient-wheel:v1';
 export const MAX_OPTIONS = 500;
 export const MAX_LABEL_LENGTH = 200;
 export const SAMPLE_LABELS = ['Coffee break', 'Go for a walk', 'One more episode', 'Read a book', 'Order pizza', 'Do the thing', 'Take a nap', 'Surprise me'];
-export const COLORS = ['#cde4a4', '#fae0a0', '#c8dfdf', '#e5d4ec', '#f6c9b5', '#d4deae', '#c9dfeb', '#f0d6a9'];
+export const COLORS = ['#c9e4a6', '#fce19c', '#b8e0dc', '#e3d0ef', '#f8c7b0', '#d7e5b4', '#bddaf0', '#f2d59e'];
+export const DARK_COLORS = ['#3b6e55', '#8a6c34', '#316c78', '#685187', '#8c5346', '#5f7640', '#3b6187', '#7a603d'];
 
 export function parseOptions(input) {
   return input.split(/[,\r\n]+/).map(label => label.trim()).filter(Boolean);
